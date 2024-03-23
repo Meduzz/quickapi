@@ -1,4 +1,4 @@
-## Quickapi
+# Quickapi
 
 The idea is to create restlike apis quickly...ier.
 
@@ -62,4 +62,8 @@ And now activate the filter in an api-call:
     ...
 ```
 
-Note that it is not enough with `?pets` (neither is `?pets[]` but `?pets[_]` will work).
+Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_]` will work).
+
+## Known issues
+
+ * one-to-many collections are created and updated from the owner collection, but not removed. The work around for the moment is to also add an api for the child collection. (which also is the only way to get the child collection migrated (setup in db))
