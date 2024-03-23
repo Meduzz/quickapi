@@ -5,11 +5,20 @@ Content-Type: application/json
 
 {
     "name":"Test Testsson",
-    "age": 42
+    "age": 42,
+    "pets": [
+        {
+            "name": "Fido",
+            "alive": true
+        },{
+            "name": "pussy",
+            "alive": false
+        }
+    ]
 }
 
 ### list
-GET /?where[age]=42
+GET /?where[age]=42&pets[]
 Host: localhost:8080
 Accept: application/json
 
@@ -19,22 +28,38 @@ Host: localhost:8080
 Content-Type: application/json
 
 {
-    "id": 1,
+  "id": 1,
     "name": "Test Testzon",
-    "age": 43
+    "age": 43,
+    "pets": [
+      {
+        "id": 1,
+        "name": "Fido",
+        "alive": false
+      },
+      {
+        "id": 2,
+        "name": "pussy",
+        "alive": false
+      },
+      {
+        "id": 5,
+        "name": "Fidoh",
+        "alive": true
+      }
+    ]
 }
-
 ### delete
 DELETE /1
 Host: localhost:8080
 
 ### read
-GET /2
+GET /1?pets[all]=false
 Host: localhost:8080
 Accept: application/json
 
 ### patch
-PATCH /1
+PATCH /1?pets[all]
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json
@@ -42,3 +67,9 @@ Accept: application/json
 {
     "age": 42
 }
+
+### Delete a pet
+DELETE /pet/5
+Host: localhost:8080
+Content-Type: application/json
+Accept: application/json
