@@ -23,6 +23,7 @@ func (r *router) Create(db *gorm.DB) func(*gin.Context) {
 		err := ctx.BindJSON(entity)
 
 		if err != nil {
+			println("binding body threw error", err.Error())
 			ctx.AbortWithStatus(400)
 			return
 		}
@@ -31,6 +32,7 @@ func (r *router) Create(db *gorm.DB) func(*gin.Context) {
 
 		if err != nil {
 			// TODO here be dragons
+			println("creating row threw error", err.Error())
 			ctx.AbortWithStatus(500)
 			return
 		}
@@ -56,6 +58,7 @@ func (r *router) Read(db *gorm.DB) func(*gin.Context) {
 
 		if err != nil {
 			// TODO here be dragons
+			println("reading row threw error", err.Error())
 			ctx.AbortWithStatus(500)
 			return
 		}
@@ -72,6 +75,7 @@ func (r *router) Update(db *gorm.DB) func(*gin.Context) {
 		err := ctx.BindJSON(entity)
 
 		if err != nil {
+			println("binding body threw error", err.Error())
 			ctx.AbortWithStatus(400)
 			return
 		}
@@ -88,6 +92,7 @@ func (r *router) Update(db *gorm.DB) func(*gin.Context) {
 
 		if err != nil {
 			// TODO here be dragons
+			println("updating row threw error", err.Error())
 			ctx.AbortWithStatus(500)
 			return
 		}
@@ -113,6 +118,7 @@ func (r *router) Delete(db *gorm.DB) func(*gin.Context) {
 
 		if err != nil {
 			// TOOD here be dragons
+			println("deleting row threw error", err.Error())
 			ctx.AbortWithStatus(500)
 			return
 		}
@@ -130,6 +136,7 @@ func (r *router) Search(db *gorm.DB) func(*gin.Context) {
 		iSkip, err := strconv.Atoi(sSkip)
 
 		if err != nil {
+			println("parsing query parameter 'skip' threw error", err.Error())
 			ctx.AbortWithStatus(400)
 			return
 		}
@@ -137,6 +144,7 @@ func (r *router) Search(db *gorm.DB) func(*gin.Context) {
 		iTake, err := strconv.Atoi(sTake)
 
 		if err != nil {
+			println("parsing query parameter 'take' threw error", err.Error())
 			ctx.AbortWithStatus(400)
 			return
 		}
@@ -161,6 +169,7 @@ func (r *router) Search(db *gorm.DB) func(*gin.Context) {
 
 		if err != nil {
 			// TODO here be dragons
+			println("searching for data threw error", err.Error())
 			ctx.AbortWithStatus(500)
 			return
 		}
@@ -178,6 +187,7 @@ func (r *router) Patch(db *gorm.DB) func(*gin.Context) {
 		err := ctx.BindJSON(&data)
 
 		if err != nil {
+			println("binding request threw error", err.Error())
 			ctx.AbortWithStatus(400)
 			return
 		}
@@ -188,6 +198,7 @@ func (r *router) Patch(db *gorm.DB) func(*gin.Context) {
 
 		if err != nil {
 			// TODO here be dragons
+			println("patching data threw error", err.Error())
 			ctx.AbortWithStatus(500)
 			return
 		}
@@ -204,6 +215,7 @@ func (r *router) Patch(db *gorm.DB) func(*gin.Context) {
 
 		if err != nil {
 			// TODO here be dragons too
+			println("loading updated data threw error", err.Error())
 			ctx.AbortWithStatus(500)
 			return
 		}
