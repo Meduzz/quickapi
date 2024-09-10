@@ -11,7 +11,7 @@ type (
 	// custom filters, preloading etc.
 	Scope func(map[string]string) func(*gorm.DB) *gorm.DB
 
-	// NamedFilter allows you to encode buisnesss rules (an a lot of other things)
+	// NamedFilter allows you to encode buisnesss rules (and a lot of other things)
 	// in code and then activate them with query params.
 	NamedFilter struct {
 		Name  string

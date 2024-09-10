@@ -1,6 +1,7 @@
 package quickapi
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -57,6 +58,11 @@ func (r *router) Read(db *gorm.DB) func(*gin.Context) {
 		err := query.First(entity, id).Error
 
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				ctx.AbortWithStatus(404)
+				return
+			}
+
 			// TODO here be dragons
 			println("reading row threw error", err.Error())
 			ctx.AbortWithStatus(500)
@@ -91,6 +97,11 @@ func (r *router) Update(db *gorm.DB) func(*gin.Context) {
 		err = query.Save(entity).Error
 
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				ctx.AbortWithStatus(404)
+				return
+			}
+
 			// TODO here be dragons
 			println("updating row threw error", err.Error())
 			ctx.AbortWithStatus(500)
@@ -117,6 +128,11 @@ func (r *router) Delete(db *gorm.DB) func(*gin.Context) {
 		err := query.Delete(entity, id).Error
 
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				ctx.AbortWithStatus(404)
+				return
+			}
+
 			// TOOD here be dragons
 			println("deleting row threw error", err.Error())
 			ctx.AbortWithStatus(500)
@@ -197,6 +213,11 @@ func (r *router) Patch(db *gorm.DB) func(*gin.Context) {
 			Updates(data).Error
 
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				ctx.AbortWithStatus(404)
+				return
+			}
+
 			// TODO here be dragons
 			println("patching data threw error", err.Error())
 			ctx.AbortWithStatus(500)

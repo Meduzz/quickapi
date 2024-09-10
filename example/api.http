@@ -18,7 +18,7 @@ Content-Type: application/json
 }
 
 ### list
-GET /?where[age]=42&pets[]
+GET /
 Host: localhost:8080
 Accept: application/json
 
@@ -33,17 +33,6 @@ Content-Type: application/json
     "age": 43,
     "pets": [
       {
-        "id": 1,
-        "name": "Fido",
-        "alive": false
-      },
-      {
-        "id": 2,
-        "name": "pussy",
-        "alive": false
-      },
-      {
-        "id": 5,
         "name": "Fidoh",
         "alive": true
       }
@@ -54,12 +43,12 @@ DELETE /1
 Host: localhost:8080
 
 ### read
-GET /1?pets[all]=false
+GET /1
 Host: localhost:8080
 Accept: application/json
 
 ### patch
-PATCH /1?pets[all]
+PATCH /1
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json
@@ -73,3 +62,7 @@ DELETE /pet/5
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json
+
+### fetch pets
+GET /pet/
+Host: localhost:8080

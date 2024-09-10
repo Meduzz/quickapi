@@ -13,14 +13,14 @@ type (
 		ID   int64  `gorm:"autoIncrement" json:"id,omitempty"`
 		Name string `gorm:"size:32" json:"name" binding:"required"`
 		Age  int    `json:"age" binding:"gt=-1"`
-		Pets []*Pet `json:"pets,omitempty" gorm:"foreignKey:owner"`
+		Pets []*Pet `json:"pets,omitempty" gorm:"constraint:OnDelete:CASCADE"`
 	}
 
 	Pet struct {
-		ID    int64  `gorm:"autoIncrement" json:"id,omitempty"`
-		Name  string `gorm:"size:32" json:"name" binding:"required"`
-		Owner int64  `json:"-"`
-		Alive bool   `json:"alive"`
+		ID       int64  `gorm:"autoIncrement" json:"id,omitempty"`
+		Name     string `gorm:"size:32" json:"name" binding:"required"`
+		PersonID int64  `json:"-"`
+		Alive    bool   `json:"alive"`
 	}
 )
 
