@@ -132,7 +132,7 @@ func (r *router) Search(ctx *rpc.RpcContext) {
 
 	hooks := createScopes(req.Scopes, r.entity.Filters())
 
-	data, err := r.storer.Search(req.Skip, req.Take, req.Where, hooks...)
+	data, err := r.storer.Search(req.Skip, req.Take, req.Where, req.Sort, hooks...)
 
 	if err != nil {
 		ctx.ReplyBuilder(func(mb *messages.MsgBuilder) {

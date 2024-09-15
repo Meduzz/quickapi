@@ -114,6 +114,12 @@ func (r *router) Search(ctx *gin.Context) {
 		where = make(map[string]string)
 	}
 
+	sort, ok := ctx.GetQueryMap("sort")
+
+	if !ok {
+		sort = make(map[string]string)
+	}
+
 	iSkip, err := strconv.Atoi(sSkip)
 
 	if err != nil {
@@ -132,7 +138,7 @@ func (r *router) Search(ctx *gin.Context) {
 
 	hooks := createScopes(ctx, r.entity.Filters())
 
-	data, err := r.storer.Search(iSkip, iTake, where, hooks...)
+	data, err := r.storer.Search(iSkip, iTake, where, sort, hooks...)
 
 	if err != nil {
 		// TODO here be dragons

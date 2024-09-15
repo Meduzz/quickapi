@@ -18,7 +18,7 @@ Content-Type: application/json
 }
 
 ### list
-GET /person/
+GET /person/?sort[age]=asc
 Host: localhost:8080
 Accept: application/json
 

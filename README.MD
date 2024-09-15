@@ -71,8 +71,8 @@ Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_
  * one-to-many collections are created and updated from the owner collection, but not removed (on certain gorm drivers and setups, ie read up in gorm how to setup your relations correctly). The work around for the moment is to also add an api for the child collection. (which also is the only way to get the child collection migrated (setup in db))
 
  ## TODO
-
-* + order by in search
+ 
 * - select fields in queries?
+> not very important, would also require rpc to have a full api.
 * - preload support in model.Entity
-> that should idealy be on query basis though...
+> that should idealy be on query basis though... and I kind of think it's a bad idea.

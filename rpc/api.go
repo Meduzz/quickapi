@@ -12,8 +12,9 @@ type (
 	SearchRequest struct {
 		Skip   int                          `json:"skip"`
 		Take   int                          `json:"take"`
-		Where  map[string]string            `json:"where"`
-		Scopes map[string]map[string]string `json:"scopes"`
+		Where  map[string]string            `json:"where,omitempty"`
+		Sort   map[string]string            `json:"sort,omitempty"`
+		Scopes map[string]map[string]string `json:"scopes,omitempty"`
 	}
 
 	PatchRequest struct {

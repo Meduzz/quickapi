@@ -2,6 +2,8 @@ package storage
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/Meduzz/helper/fp/slice"
 	"github.com/Meduzz/helper/http/herror"
@@ -16,7 +18,7 @@ type (
 		Read(string) (any, error)
 		Update(any) (any, error)
 		Delete(string) error
-		Search(int, int, map[string]string, ...model.Hook) (any, error)
+		Search(int, int, map[string]string, map[string]string, ...model.Hook) (any, error)
 		Patch(string, map[string]any) (any, error)
 	}
 
@@ -89,7 +91,7 @@ func (s *storage) Delete(id string) error {
 	return nil
 }
 
-func (s *storage) Search(skip, take int, where map[string]string, hooks ...model.Hook) (any, error) {
+func (s *storage) Search(skip, take int, where map[string]string, sort map[string]string, hooks ...model.Hook) (any, error) {
 	data := s.entity.CreateArray()
 
 	query := s.db.
@@ -98,6 +100,16 @@ func (s *storage) Search(skip, take int, where map[string]string, hooks ...model
 
 	if len(where) > 0 {
 		query = query.Where(where)
+	}
+
+	if len(sort) > 0 {
+		sorting := make([]string, 0)
+
+		for k, v := range sort {
+			sorting = append(sorting, fmt.Sprintf("%s %s", k, v))
+		}
+
+		query.Order(strings.Join(sorting, ", "))
 	}
 
 	slice.ForEach(hooks, func(hook model.Hook) {
