@@ -1,53 +1,87 @@
 package quickapi
 
 import (
-	"fmt"
-
+	"github.com/Meduzz/helper/fp/slice"
+	"github.com/Meduzz/helper/nuts"
+	"github.com/Meduzz/quickapi/http"
+	"github.com/Meduzz/quickapi/model"
+	"github.com/Meduzz/quickapi/rpc"
+	arepece "github.com/Meduzz/rpc"
+	"github.com/Meduzz/rpc/encoding"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
 
-// Run runs db migrations for T, creates a gin server
-// setups the routing for T (crud + list/search) (in the root /)
-// and starts the server on 8080.
-func Run(db *gorm.DB, entities ...Entity) error {
-	// start gin
-	engine := gin.Default()
-	// create a place to store entities to migrate
-	migrations := make([]any, 0)
+func GinStarter(db *gorm.DB, entities ...model.Entity) *cobra.Command {
+	cmd := &cobra.Command{}
 
-	// iterate entities and create their api
-	for _, entity := range entities {
-		migrations = append(migrations, entity.Create())
+	cmd.Use = "start"
+	cmd.Short = "start a quickapi over gin"
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		// start gin
+		engine := gin.Default()
 
-		if entity.Name() == "" {
-			For(db, &engine.RouterGroup, entity)
-		} else {
-			rg := engine.Group(fmt.Sprintf("/%s", entity.Name()))
-			For(db, rg, entity)
+		err := Migrate(db, entities...)
+
+		if err != nil {
+			return err
 		}
+
+		// iterate entities and create their api
+		slice.ForEach(entities, func(entity model.Entity) {
+			http.For(db, engine, entity)
+		})
+
+		return engine.Run(":8080")
 	}
 
-	// run migration
-	err := db.AutoMigrate(migrations...)
-
-	if err != nil {
-		return err
-	}
-
-	return engine.Run(":8080")
+	return cmd
 }
 
-// For sets up routing for T in the provided router group
-// but leaves up to you to deal with the server and run migrations.
-func For(db *gorm.DB, api *gin.RouterGroup, entity Entity) {
-	r := newRouter(entity)
+func RpcStarter(db *gorm.DB, entities ...model.Entity) *cobra.Command {
+	cmd := &cobra.Command{}
 
-	// setup REST endpoints
-	api.POST("/", r.Create(db))      // create
-	api.GET("/:id", r.Read(db))      // read
-	api.PUT("/:id", r.Update(db))    // update
-	api.DELETE("/:id", r.Delete(db)) // delete
-	api.GET("/", r.Search(db))       // list/search
-	api.PATCH("/:id", r.Patch(db))   // patch
+	cmd.Use = "start"
+	cmd.Short = "start a quickapi over rpc"
+	cmd.Flags().String("prefix", "", "prefix to use when creating topic")
+	cmd.Flags().String("queue", "", "queue to use as queueGroup when subscribint to topic")
+
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		prefix, _ := cmd.Flags().GetString("prefix")
+		queue, _ := cmd.Flags().GetString("queue")
+
+		nc, err := nuts.Connect()
+
+		if err != nil {
+			return err
+		}
+
+		err = Migrate(db, entities...)
+
+		if err != nil {
+			return err
+		}
+
+		srv := arepece.NewRpc(nc, encoding.Json())
+
+		// iterate entities and create their api
+		slice.ForEach(entities, func(entity model.Entity) {
+			rpc.For(db, srv, prefix, queue, entity)
+		})
+
+		srv.Run()
+
+		return nil
+	}
+
+	return cmd
+}
+
+func Migrate(db *gorm.DB, entities ...model.Entity) error {
+	migrations := slice.Map(entities, func(e model.Entity) any {
+		return e.Create()
+	})
+
+	return db.AutoMigrate(migrations...)
 }

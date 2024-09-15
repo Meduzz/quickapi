@@ -4,24 +4,26 @@ The idea is to create restlike apis quickly...ier.
 
 As you can see in the example folder, it's focused around your go struct. The struct defines both the api and the domain (and validation). 
 
-You then wrap your struct in an `Entity` by calling the `NewEntity`-function.
+You then wrap your struct in an `model.Entity` by calling the `model.NewEntity`-function.
 
-The lib then applies a thin layer to turn the `Entity` into an api that persists data (via Gin and Gorm).
+The lib then applies a thin layer to turn the `model.Entity` into an api that persists data (via Gin and Gorm).
 
 ### The fork in the road
 
-There's two options of how to consume the lib.
+There's a couple of options of how to consume the lib.
 
-1. `Run` - Let the lib handle the Gin instance, and let you focus on providing the entitiy. Hence quick apis.
-2. `For` - Provide the lib with a Gin instance, and only wire up the api for the provided entity. Also quick apis, but also flexibel.
+1. `GinStarter` - Returns a cobra command that starts a gin server and boots up all provided entities.
+2. `http.For` - Provide the lib with a Gin instance which it uses to wire up the api for the provided entity. Also quick apis, but also flexibel.
+3. `RpcStarter` -  Returns a cobra command that starts a rpc server and boots up all provided entities.
+4. `rpc.For` - Provide the lib with a rpc server which it uses to wire up the api for the provided entity.
 
-Both method will require you to provide the gorm.DB connection. And `Run` uses `For` under the hood. Just look at the example already.
+Both method will require you to provide the gorm.DB connection. And `GinStarter` uses `For` under the hood. Just look at the example already.
 
 ## Entity
 
 The entity abstraction, allows us to tie it to a path in the api and also tie any filters to that entity.
 
-Entities are created through `NewEntity[<struct>](name:string, [...filters:*NamedFilter])` function.
+Entities are created through `model.NewEntity[<struct>](name:string, [...filters:*model.NamedFilter])` function.
 
 - `name` will be used for the api-path.
 - `filters` can be triggered when the api is called via query-params.
@@ -34,13 +36,13 @@ While filters can look awefully involved, they are quite simple but yet powerful
 
 In the example-folder I use filters to preload the one-to-many `Pet`-collection when loading anything from the `Person`-collection.
 
-To create a filter use the `NewFilter(name:string, handler:quickapi.Scope)`-function. It takes a name (which is the  name of the query-param where we will look for data). The second param is a `Scope`-function (`func(map[string]string) func(*gorm.DB) *gorm.DB`). This is a higher order function that accepts a `map[string]string` and returns a function `func(*gorm.DB) *gorm.DB`. The returned function is used as a scope in Gorm.
+To create a filter use the `model.NewFilter(name:string, handler:model..Scope)`-function. It takes a name (which is the  name of the query-param where we will look for data). The second param is a `model.Scope`-function (`func(map[string]string) model.Hook`). This is a higher order function that accepts a `map[string]string` and returns a function `model.Hook` which in turn is defined as `func(*gorm.DB) *gorm.DB`. The returned function is used as a scope inside the query to Gorm.
 
 Lets define a filter:
 ```
     // define the handler function
-    func preloadPets() quickapi.Scope {
-        return func(m map[string]string) func(*gorm.DB) *gorm.DB {
+    func preloadPets() model.Scope {
+        return func(m map[string]string) model.Hook {
             return func(query *gorm.DB) *gorm.DB {
                 // ... use the data in the map m to change the query
                 return query
@@ -49,10 +51,10 @@ Lets define a filter:
     }
 
     // create the filter
-    filter := quickapi.NewFilter("pets", preloadPets())
+    filter := model.NewFilter("pets", preloadPets())
 
     // use filter when creating entities
-    person := quickapi.NewEntity[Person]("", filter)
+    person := model..NewEntity[Person]("person", filter)
     ...
 ```
 
@@ -66,4 +68,11 @@ Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_
 
 ## Known issues
 
- * one-to-many collections are created and updated from the owner collection, but not removed. The work around for the moment is to also add an api for the child collection. (which also is the only way to get the child collection migrated (setup in db))
+ * one-to-many collections are created and updated from the owner collection, but not removed (on certain gorm drivers and setups, ie read up in gorm how to setup your relations correctly). The work around for the moment is to also add an api for the child collection. (which also is the only way to get the child collection migrated (setup in db))
+
+ ## TODO
+
+* + order by in search
+* - select fields in queries?
+* - preload support in model.Entity
+> that should idealy be on query basis though...

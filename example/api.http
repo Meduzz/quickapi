@@ -1,5 +1,5 @@
 ### create
-POST /
+POST /person/
 Host: localhost:8080
 Content-Type: application/json
 
@@ -18,12 +18,12 @@ Content-Type: application/json
 }
 
 ### list
-GET /
+GET /person/
 Host: localhost:8080
 Accept: application/json
 
 ### update
-PUT /1
+PUT /person/1
 Host: localhost:8080
 Content-Type: application/json
 
@@ -38,17 +38,18 @@ Content-Type: application/json
       }
     ]
 }
+
 ### delete
-DELETE /1
+DELETE /person/1
 Host: localhost:8080
 
 ### read
-GET /1
+GET /person/1
 Host: localhost:8080
 Accept: application/json
 
 ### patch
-PATCH /1
+PATCH /person/1
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json

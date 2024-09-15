@@ -1,4 +1,4 @@
-package quickapi
+package model
 
 type (
 	// Entity is the base of the api
