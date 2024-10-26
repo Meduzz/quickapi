@@ -10,7 +10,7 @@ import (
 
 // For sets up routing for T in the provided router group
 // but leaves up to you to deal with the server and run migrations.
-func For(db *gorm.DB, e *gin.Engine, entity model.Entity) {
+func For(db *gorm.DB, e *gin.RouterGroup, entity model.Entity) {
 	r := newRouter(db, entity)
 
 	if entity.Name() != "" {
