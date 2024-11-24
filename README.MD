@@ -6,7 +6,7 @@ As you can see in the example folder, it's focused around your go struct. The st
 
 You then wrap your struct in an `model.Entity` by calling the `model.NewEntity`-function.
 
-The lib then applies a thin layer to turn the `model.Entity` into an api that persists data (via Gin and Gorm).
+The lib then applies a thin layer to turn the `model.Entity` into an api that persists data (via Gin|Rpc and Gorm).
 
 ### The fork in the road
 
@@ -23,14 +23,23 @@ Both method will require you to provide the gorm.DB connection. And `GinStarter`
 
 The entity abstraction, allows us to tie it to a path in the api and also tie any filters to that entity.
 
-Entities are created through `model.NewEntity[<struct>](name:string, [...filters:*model.NamedFilter])` function.
+Entities are created through `model.NewEntity[<struct>](name:string, preload:model.PreloadDelegate, [...filters:*model.NamedFilter])` function.
 
 - `name` will be used for the api-path.
+- `preload` is a function that returns the preload config to use (if the correct preload paramters was provided)
 - `filters` can be triggered when the api is called via query-params.
 
 See next section on how to create filters.
 
-## Filters
+### Preload
+
+Preload is a Gorm api to load "child" collections. Like in the `example/`, to load the `pets`-collection when fetching a `person` preload can be used. The Gorm preload can take a condition, like `alive = ?`. Preload is exposed as public api, like `where` and `sort`.
+
+To avoid sql injection, the conditions used in preload is predefined. Multiple conditions can be grouped together, which can be both a blessing and a curse. At the same time, multiple of these groups of preloads can be called in the same api-call.
+
+In each api call, the group can take one parameter. And if there's no preload data in the call, no preloading will be done.
+
+### Filters
 
 While filters can look awefully involved, they are quite simple but yet powerful. The biggest drawback of them is that you have to opt in to them when you call the api.
 
@@ -72,8 +81,6 @@ Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_
 
  ## TODO
  
-* preload support in model.Entity
-> that should idealy be on query basis though... and I kind of think it's a bad idea.
 * json entities
 * meta endpoint for each entity
 * select fields in queries?
