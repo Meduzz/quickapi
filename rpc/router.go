@@ -56,7 +56,7 @@ func (r *router) Read(ctx *rpc.RpcContext) {
 		})
 	}
 
-	data, err := r.storer.Read(req.ID)
+	data, err := r.storer.Read(req.ID, req.Preload)
 
 	if err != nil {
 		ctx.ReplyBuilder(func(mb *messages.MsgBuilder) {
@@ -132,7 +132,7 @@ func (r *router) Search(ctx *rpc.RpcContext) {
 
 	hooks := createScopes(req.Scopes, r.entity.Filters())
 
-	data, err := r.storer.Search(req.Skip, req.Take, req.Where, req.Sort, hooks...)
+	data, err := r.storer.Search(req.Skip, req.Take, req.Where, req.Sort, req.Preload, hooks...)
 
 	if err != nil {
 		ctx.ReplyBuilder(func(mb *messages.MsgBuilder) {
@@ -157,7 +157,7 @@ func (r *router) Patch(ctx *rpc.RpcContext) {
 		})
 	}
 
-	data, err := r.storer.Patch(req.ID, req.Data)
+	data, err := r.storer.Patch(req.ID, req.Data, req.Preload)
 
 	if err != nil {
 		ctx.ReplyBuilder(func(mb *messages.MsgBuilder) {

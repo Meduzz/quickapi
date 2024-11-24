@@ -15,11 +15,11 @@ import (
 type (
 	Storer interface {
 		Create(any) (any, error)
-		Read(string) (any, error)
+		Read(string, map[string]string) (any, error)
 		Update(any) (any, error)
 		Delete(string) error
-		Search(int, int, map[string]string, map[string]string, ...model.Hook) (any, error)
-		Patch(string, map[string]any) (any, error)
+		Search(int, int, map[string]string, map[string]string, map[string]string, ...model.Hook) (any, error)
+		Patch(string, map[string]any, map[string]string) (any, error)
 	}
 
 	storage struct {
@@ -42,10 +42,11 @@ func (s *storage) Create(entity any) (any, error) {
 	return entity, nil
 }
 
-func (s *storage) Read(id string) (any, error) {
+func (s *storage) Read(id string, preload map[string]string) (any, error) {
 	entity := s.entity.Create()
 
-	err := s.db.First(entity, id).Error
+	query := s.preloadQuery(s.db, preload)
+	err := query.First(entity, id).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -60,7 +61,6 @@ func (s *storage) Read(id string) (any, error) {
 
 func (s *storage) Update(entity any) (any, error) {
 	query := s.db.Session(&gorm.Session{FullSaveAssociations: true})
-
 	err := query.Save(entity).Error
 
 	if err != nil {
@@ -91,12 +91,14 @@ func (s *storage) Delete(id string) error {
 	return nil
 }
 
-func (s *storage) Search(skip, take int, where map[string]string, sort map[string]string, hooks ...model.Hook) (any, error) {
+func (s *storage) Search(skip, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks ...model.Hook) (any, error) {
 	data := s.entity.CreateArray()
 
 	query := s.db.
 		Offset(skip).
 		Limit(take)
+
+	query = s.preloadQuery(query, preload)
 
 	if len(where) > 0 {
 		query = query.Where(where)
@@ -125,9 +127,8 @@ func (s *storage) Search(skip, take int, where map[string]string, sort map[strin
 	return data, nil
 }
 
-func (s *storage) Patch(id string, data map[string]any) (any, error) {
+func (s *storage) Patch(id string, data map[string]any, preload map[string]string) (any, error) {
 	entity := s.entity.Create()
-
 	err := s.db.Model(entity).
 		Where("id = ?", id).
 		Updates(data).Error
@@ -140,8 +141,7 @@ func (s *storage) Patch(id string, data map[string]any) (any, error) {
 		return nil, err
 	}
 
-	query := s.db
-
+	query := s.preloadQuery(s.db, preload)
 	err = query.Find(entity, id).Error
 
 	if err != nil {
@@ -149,4 +149,23 @@ func (s *storage) Patch(id string, data map[string]any) (any, error) {
 	}
 
 	return entity, nil
+}
+
+func (s *storage) preloadQuery(query *gorm.DB, preload map[string]string) *gorm.DB {
+	// each pair represents a named preload with an optional value into a condition
+	for name, conditionValue := range preload {
+		// fetch the named preload from the entity
+		querySpecs := s.entity.Preload(name)
+
+		// for each field in the spec apply Preload
+		for field, config := range querySpecs {
+			if config.Converter == nil {
+				config.Converter = func(s string) any { return s }
+			}
+
+			query = query.Preload(field, config.Condition, config.Converter(conditionValue))
+		}
+	}
+
+	return query
 }

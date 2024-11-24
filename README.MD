@@ -72,7 +72,9 @@ Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_
 
  ## TODO
  
-* - select fields in queries?
-> not very important, would also require rpc to have a full api.
-* - preload support in model.Entity
+* preload support in model.Entity
 > that should idealy be on query basis though... and I kind of think it's a bad idea.
+* json entities
+* meta endpoint for each entity
+* select fields in queries?
+> not very important, would also require rpc to have a full api.

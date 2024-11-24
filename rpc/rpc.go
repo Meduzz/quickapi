@@ -17,12 +17,12 @@ func For(db *gorm.DB, srv *rpc.RPC, prefix, queue string, entity model.Entity) {
 
 	router := newRouter(db, entity)
 
-	srv.HandleRPC(topicify(topic, "create"), "", router.Create)
-	srv.HandleRPC(topicify(topic, "read"), "", router.Read)
-	srv.HandleRPC(topicify(topic, "update"), "", router.Update)
-	srv.HandleRPC(topicify(topic, "delete"), "", router.Delete)
-	srv.HandleRPC(topicify(topic, "search"), "", router.Search)
-	srv.HandleRPC(topicify(topic, "patch"), "", router.Patch)
+	srv.HandleRPC(topicify(topic, "create"), queue, router.Create)
+	srv.HandleRPC(topicify(topic, "read"), queue, router.Read)
+	srv.HandleRPC(topicify(topic, "update"), queue, router.Update)
+	srv.HandleRPC(topicify(topic, "delete"), queue, router.Delete)
+	srv.HandleRPC(topicify(topic, "search"), queue, router.Search)
+	srv.HandleRPC(topicify(topic, "patch"), queue, router.Patch)
 }
 
 func topicify(prefix, action string) string {

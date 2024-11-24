@@ -18,7 +18,7 @@ Content-Type: application/json
 }
 
 ### list
-GET /person/?sort[age]=asc
+GET /person/?sort[age]=asc&preload[naming]=pussy
 Host: localhost:8080
 Accept: application/json
 
@@ -44,12 +44,12 @@ DELETE /person/1
 Host: localhost:8080
 
 ### read
-GET /person/1
+GET /person/1?preload[status]=true
 Host: localhost:8080
 Accept: application/json
 
 ### patch
-PATCH /person/1
+PATCH /person/1?preload[naming]=pussy
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json

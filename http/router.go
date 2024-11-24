@@ -49,8 +49,9 @@ func (r *router) Create(ctx *gin.Context) {
 
 func (r *router) Read(ctx *gin.Context) {
 	id := ctx.Param("id")
+	preload := ctx.QueryMap("preload")
 
-	entity, err := r.storer.Read(id)
+	entity, err := r.storer.Read(id, preload)
 
 	if err != nil {
 		// TODO here be dragons
@@ -136,9 +137,10 @@ func (r *router) Search(ctx *gin.Context) {
 		return
 	}
 
+	preload := ctx.QueryMap("preload")
 	hooks := createScopes(ctx, r.entity.Filters())
 
-	data, err := r.storer.Search(iSkip, iTake, where, sort, hooks...)
+	data, err := r.storer.Search(iSkip, iTake, where, sort, preload, hooks...)
 
 	if err != nil {
 		// TODO here be dragons
@@ -163,7 +165,9 @@ func (r *router) Patch(ctx *gin.Context) {
 		ctx.AbortWithStatus(400)
 		return
 	}
-	entity, err := r.storer.Patch(id, data)
+
+	preload := ctx.QueryMap("preload")
+	entity, err := r.storer.Patch(id, data, preload)
 
 	if err != nil {
 		// TODO here be dragons
