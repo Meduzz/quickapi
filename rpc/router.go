@@ -18,6 +18,7 @@ type (
 
 func newRouter(db *gorm.DB, entity model.Entity) *router {
 	storer := storage.NewStorer(db, entity)
+
 	return &router{entity, storer}
 }
 
@@ -72,8 +73,8 @@ func (r *router) Read(ctx *rpc.RpcContext) {
 }
 
 func (r *router) Update(ctx *rpc.RpcContext) {
-	data := r.entity.Create()
-	err := ctx.Bind(data)
+	request := &UpdateRequest{}
+	err := ctx.Bind(request)
 
 	if err != nil {
 		ctx.ReplyBuilder(func(mb *messages.MsgBuilder) {
@@ -81,7 +82,7 @@ func (r *router) Update(ctx *rpc.RpcContext) {
 		})
 	}
 
-	data, err = r.storer.Update(data)
+	data, err := r.storer.Update(request.ID, request.Data)
 
 	if err != nil {
 		ctx.ReplyBuilder(func(mb *messages.MsgBuilder) {

@@ -55,7 +55,8 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "age": 42
+    "age": 42,
+    "pets[0].name": "Rudolf"
 }
 
 ### Delete a pet

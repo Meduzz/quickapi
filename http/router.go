@@ -19,7 +19,13 @@ type (
 )
 
 func newRouter(db *gorm.DB, entity model.Entity) *router {
-	storer := storage.NewStorer(db, entity)
+	var storer storage.Storer
+	if entity.Kind() == model.KindNormal {
+		storer = storage.NewStorer(db, entity)
+	} else {
+		storer = storage.NewJsonStore(db, entity)
+	}
+
 	return &router{storer, entity}
 }
 
@@ -66,6 +72,7 @@ func (r *router) Read(ctx *gin.Context) {
 }
 
 func (r *router) Update(ctx *gin.Context) {
+	id := ctx.Param("id")
 	entity := r.entity.Create()
 
 	err := ctx.BindJSON(entity)
@@ -76,7 +83,7 @@ func (r *router) Update(ctx *gin.Context) {
 		return
 	}
 
-	entity, err = r.storer.Update(entity)
+	entity, err = r.storer.Update(id, entity)
 
 	if err != nil {
 		// TODO here be dragons

@@ -23,7 +23,12 @@ Both method will require you to provide the gorm.DB connection. And `GinStarter`
 
 The entity abstraction, allows us to tie it to a path in the api and also tie any filters to that entity.
 
-Entities are created through `model.NewEntity[<struct>](name:string, preload:model.PreloadDelegate, [...filters:*model.NamedFilter])` function.
+*Flavours*
+
+* Theres normal mode, which means your struct represents your table.
+* And there's JSON, which means your struct represents you data, quickapi owns your table, and your struct is stored as json.
+
+Entities are created through `model.New(Json)Entity[<struct>](name:string, preload:model.PreloadDelegate, [...filters:*model.NamedFilter])` function.
 
 - `name` will be used for the api-path.
 - `preload` is a function that returns the preload config to use (if the correct preload paramters was provided)
@@ -77,11 +82,14 @@ Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_
 
 ## Known issues
 
- * one-to-many collections are created and updated from the owner collection, but not removed (on certain gorm drivers and setups, ie read up in gorm how to setup your relations correctly). The work around for the moment is to also add an api for the child collection. (which also is the only way to get the child collection migrated (setup in db))
+ * one-to-many *
+ Collections defined as one-to-many are created and updated from the owner collection, but not removed (on certain gorm drivers and setups, ie read up in gorm how to setup your relations correctly). The work around for the moment is to also add an api for the child collection. (which also is the only way to get the child collection migrated (setup in db))
+
+ * json entity *
+ The update method here will replace the entire document with what you send. If you only intend to update individual fields, use patch.
 
  ## TODO
  
-* json entities
 * meta endpoint for each entity
 * select fields in queries?
 > not very important, would also require rpc to have a full api.

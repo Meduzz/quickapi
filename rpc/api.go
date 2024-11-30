@@ -6,6 +6,11 @@ type (
 		Preload map[string]string `json:"preload,omitempty"`
 	}
 
+	UpdateRequest struct {
+		ID   string `json:"id,omitempty"`
+		Data any    `json:"data"`
+	}
+
 	DeleteRequest struct {
 		ID string `json:"id"`
 	}

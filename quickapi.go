@@ -1,11 +1,14 @@
 package quickapi
 
 import (
+	"errors"
+
 	"github.com/Meduzz/helper/fp/slice"
 	"github.com/Meduzz/helper/nuts"
 	"github.com/Meduzz/quickapi/http"
 	"github.com/Meduzz/quickapi/model"
 	"github.com/Meduzz/quickapi/rpc"
+	"github.com/Meduzz/quickapi/storage"
 	arepece "github.com/Meduzz/rpc"
 	"github.com/Meduzz/rpc/encoding"
 	"github.com/gin-gonic/gin"
@@ -79,9 +82,23 @@ func RpcStarter(db *gorm.DB, entities ...model.Entity) *cobra.Command {
 }
 
 func Migrate(db *gorm.DB, entities ...model.Entity) error {
-	migrations := slice.Map(entities, func(e model.Entity) any {
-		return e.Create()
+	errorz := slice.Map(entities, func(e model.Entity) error {
+		if e.Kind() == model.KindNormal {
+			return db.Table(e.Name()).AutoMigrate(e.Create())
+		} else {
+			return db.Table(e.Name()).AutoMigrate(&storage.JsonTable{})
+		}
 	})
 
-	return db.AutoMigrate(migrations...)
+	return slice.Fold(errorz, nil, func(err, agg error) error {
+		if err != nil {
+			if agg != nil {
+				return errors.Join(agg, err)
+			}
+
+			return err
+		}
+
+		return nil
+	})
 }
