@@ -24,7 +24,9 @@ func NewStorer(db *gorm.DB, entity model.Entity) Storer {
 }
 
 func (s *storage) Create(entity any) (any, error) {
-	err := s.db.Create(entity).Error
+	err := s.db.
+		Table(s.entity.Name()).
+		Create(entity).Error
 
 	if err != nil {
 		return nil, err
@@ -37,7 +39,9 @@ func (s *storage) Read(id string, preload map[string]string) (any, error) {
 	entity := s.entity.Create()
 
 	query := s.preloadQuery(s.db, preload)
-	err := query.First(entity, id).Error
+	err := query.
+		Table(s.entity.Name()).
+		First(entity, id).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -52,7 +56,9 @@ func (s *storage) Read(id string, preload map[string]string) (any, error) {
 
 func (s *storage) Update(id string, entity any) (any, error) {
 	query := s.db.Session(&gorm.Session{FullSaveAssociations: true})
-	err := query.Save(entity).Error
+	err := query.
+		Table(s.entity.Name()).
+		Save(entity).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -67,9 +73,13 @@ func (s *storage) Update(id string, entity any) (any, error) {
 
 func (s *storage) Delete(id string) error {
 	entity := s.entity.Create()
-	query := s.db.Select(clause.Associations)
+	query := s.db.
+		Table(s.entity.Name()).
+		Select(clause.Associations)
 
-	err := query.Delete(entity, id).Error
+	err := query.
+		Table(s.entity.Name()).
+		Delete(entity, id).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -86,6 +96,7 @@ func (s *storage) Search(skip, take int, where map[string]string, sort map[strin
 	data := s.entity.CreateArray()
 
 	query := s.db.
+		Table(s.entity.Name()).
 		Offset(skip).
 		Limit(take)
 
@@ -120,7 +131,9 @@ func (s *storage) Search(skip, take int, where map[string]string, sort map[strin
 
 func (s *storage) Patch(id string, data map[string]any, preload map[string]string) (any, error) {
 	entity := s.entity.Create()
-	err := s.db.Model(entity).
+	err := s.db.
+		Table(s.entity.Name()).
+		Model(entity).
 		Where("id = ?", id).
 		Updates(data).Error
 
@@ -133,7 +146,9 @@ func (s *storage) Patch(id string, data map[string]any, preload map[string]strin
 	}
 
 	query := s.preloadQuery(s.db, preload)
-	err = query.Find(entity, id).Error
+	err = query.
+		Table(s.entity.Name()).
+		Find(entity, id).Error
 
 	if err != nil {
 		return nil, err

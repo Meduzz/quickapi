@@ -33,8 +33,10 @@ func main() {
 	}
 
 	start := quickapi.GinStarter(db,
-		model.NewEntity[Person]("person", personPreload, model.NewFilter("asdf", preloadPets())),
-		model.NewEntity[Pet]("pet", nil))
+		model.NewEntity[Person]("person", personPreload),
+		model.NewEntity[Pet]("pets", nil))
+
+	// model.NewEntity[Person]("person", personPreload, model.NewFilter("asdf", preloadPets())),
 
 	/*
 		// dont forget you should provide --prefix and --queue flags here
@@ -72,6 +74,7 @@ func personPreload(name string) map[string]*model.PreloadConfig {
 	return preload[name]
 }
 
+/*
 func preloadPets() model.Scope {
 	return func(m map[string]string) model.Hook {
 		return func(d *gorm.DB) *gorm.DB {
@@ -92,3 +95,4 @@ func preloadPets() model.Scope {
 		}
 	}
 }
+*/

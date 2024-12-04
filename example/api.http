@@ -17,7 +17,7 @@ Content-Type: application/json
     ]
 }
 
-### list
+### list #&asdf[alive]=false
 GET /person/?sort[age]=asc&preload[naming]=pussy
 Host: localhost:8080
 Accept: application/json
@@ -59,12 +59,16 @@ Accept: application/json
     "pets[0].name": "Rudolf"
 }
 
+### Person meta
+GET /person/_meta
+Host: localhost:8080
+
 ### Delete a pet
-DELETE /pet/5
+DELETE /pets/5
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json
 
 ### fetch pets
-GET /pet/
+GET /pets/
 Host: localhost:8080
