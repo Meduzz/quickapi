@@ -4,9 +4,9 @@ The idea is to create restlike apis quickly...ier.
 
 As you can see in the example folder, it's focused around your go struct. The struct defines both the api and the domain (and validation). 
 
-You then wrap your struct in an `model.Entity` by calling the `model.NewEntity`-function.
+You then wrap your struct in an `model.Entity` by calling the `model.NewEntity`-function (or `model.NewJsonEntity`).
 
-The lib then applies a thin layer to turn the `model.Entity` into an api that persists data (via Gin|Rpc and Gorm).
+The lib then applies a thin layer to turn the `model.Entity` into an api that persists data (via Gin and Gorm).
 
 ### The fork in the road
 
@@ -14,8 +14,6 @@ There's a couple of options of how to consume the lib.
 
 1. `GinStarter` - Returns a cobra command that starts a gin server and boots up all provided entities.
 2. `http.For` - Provide the lib with a Gin instance which it uses to wire up the api for the provided entity. Also quick apis, but also flexibel.
-3. `RpcStarter` -  Returns a cobra command that starts a rpc server and boots up all provided entities.
-4. `rpc.For` - Provide the lib with a rpc server which it uses to wire up the api for the provided entity.
 
 Both method will require you to provide the gorm.DB connection. And `GinStarter` uses `For` under the hood. Just look at the example already.
 
@@ -90,6 +88,5 @@ Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_
 
  ## TODO
  
-* meta endpoint for each entity
 * select fields in queries?
 > not very important, would also require rpc to have a full api.
