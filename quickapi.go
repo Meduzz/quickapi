@@ -28,9 +28,7 @@ func GinStarter(db *gorm.DB, entities ...model.Entity) *cobra.Command {
 		}
 
 		// iterate entities and create their api
-		slice.ForEach(entities, func(entity model.Entity) {
-			http.For(db, &engine.RouterGroup, entity)
-		})
+		http.For(db, &engine.RouterGroup, entities...)
 
 		return engine.Run(":8080")
 	}

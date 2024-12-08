@@ -10,6 +10,10 @@ type (
 )
 
 func NewJsonEntity[T any](name string, filters ...*NamedFilter) Entity {
+	if name == "" {
+		panic("Entity must have a name!")
+	}
+
 	return &jsonEntity{
 		name:         name,
 		factory:      func() any { return new(T) },

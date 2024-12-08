@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Meduzz/helper/fp/slice"
 	"github.com/Meduzz/quickapi/model"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -30,14 +31,22 @@ type (
 		Map    bool    `json:"map,omitempty"`   // is map
 		Entity *Entity `json:"entity,omitempty"`
 	}
+
+	Discovery struct {
+		Entities []string `json:"entities"`
+	}
 )
 
 // For sets up routing for T in the provided router group
 // but leaves up to you to deal with the server and run migrations.
-func For(db *gorm.DB, e *gin.RouterGroup, entity model.Entity) {
-	r := newRouter(db, entity)
+func For(db *gorm.DB, e *gin.RouterGroup, entities ...model.Entity) {
+	discovery := &Discovery{}
 
-	if entity.Name() != "" {
+	slice.ForEach(entities, func(entity model.Entity) {
+		r := newRouter(db, entity)
+
+		discovery.Entities = append(discovery.Entities, entity.Name())
+
 		api := e.Group(fmt.Sprintf("/%s", entity.Name()))
 
 		// setup REST endpoints
@@ -48,16 +57,11 @@ func For(db *gorm.DB, e *gin.RouterGroup, entity model.Entity) {
 		api.GET("/", r.Search)       // list/search
 		api.PATCH("/:id", r.Patch)   // patch
 		api.GET("/_meta", metaEndpoint(entity))
-	} else {
-		// setup REST endpoints
-		e.POST("/", r.Create)      // create
-		e.GET("/:id", r.Read)      // read
-		e.PUT("/:id", r.Update)    // update
-		e.DELETE("/:id", r.Delete) // delete
-		e.GET("/", r.Search)       // list/search
-		e.PATCH("/:id", r.Patch)   // patch
-		e.GET("/_meta", metaEndpoint(entity))
-	}
+	})
+
+	e.GET("/_discover", func(ctx *gin.Context) {
+		ctx.JSON(200, discovery)
+	})
 }
 
 func createScopes(ctx *gin.Context, filters []*model.NamedFilter) []model.Hook {

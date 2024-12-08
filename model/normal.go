@@ -16,6 +16,10 @@ const (
 
 // NewEntity creates a new entity, that is the base for the api logic.
 func NewEntity[T any](name string, preload PreloadDelegate, filters ...*NamedFilter) Entity {
+	if name == "" {
+		panic("Entity must have a name!")
+	}
+
 	if preload == nil {
 		preload = func(s string) map[string]*PreloadConfig {
 			return nil
