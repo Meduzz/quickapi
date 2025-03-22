@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -20,10 +21,12 @@ type (
 
 func newRouter(db *gorm.DB, entity model.Entity) *router {
 	var storer storage.Storer
-	if entity.Kind() == model.KindNormal {
+	if entity.Kind() == model.NormalKind {
 		storer = storage.NewStorer(db, entity)
-	} else {
+	} else if entity.Kind() == model.JsonKind {
 		storer = storage.NewJsonStore(db, entity)
+	} else {
+		panic(fmt.Sprintf("Unknown entity kind: %s", entity.Kind()))
 	}
 
 	return &router{storer, entity}
@@ -145,7 +148,13 @@ func (r *router) Search(ctx *gin.Context) {
 	}
 
 	preload := ctx.QueryMap("preload")
-	hooks := createScopes(ctx, r.entity.Filters())
+	hooks := make([]model.Hook, 0)
+
+	scopeSupport, ok := r.entity.(model.ScopeSupport)
+
+	if ok {
+		hooks = createScopes(ctx, scopeSupport.Scopes())
+	}
 
 	data, err := r.storer.Search(iSkip, iTake, where, sort, preload, hooks...)
 

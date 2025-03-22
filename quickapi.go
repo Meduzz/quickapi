@@ -2,6 +2,7 @@ package quickapi
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Meduzz/helper/fp/slice"
 	"github.com/Meduzz/quickapi/http"
@@ -38,10 +39,12 @@ func GinStarter(db *gorm.DB, entities ...model.Entity) *cobra.Command {
 
 func Migrate(db *gorm.DB, entities ...model.Entity) error {
 	errorz := slice.Map(entities, func(e model.Entity) error {
-		if e.Kind() == model.KindNormal {
+		if e.Kind() == model.NormalKind {
 			return db.Table(e.Name()).AutoMigrate(e.Create())
-		} else {
+		} else if e.Kind() == model.JsonKind {
 			return db.Table(e.Name()).AutoMigrate(&storage.JsonTable{})
+		} else {
+			return fmt.Errorf("unknown entity kind: %s", e.Kind())
 		}
 	})
 

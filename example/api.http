@@ -1,5 +1,5 @@
 ### create
-POST /person/
+POST /persons/
 Host: localhost:8080
 Content-Type: application/json
 
@@ -17,13 +17,13 @@ Content-Type: application/json
     ]
 }
 
-### list #&asdf[alive]=false
-GET /person/?sort[age]=asc&preload[naming]=pussy
+### list persons
+GET /persons/?sort[age]=asc&preload[naming]=pussy&where[name]=Test Testsson
 Host: localhost:8080
 Accept: application/json
 
 ### update
-PUT /person/1
+PUT /persons/1
 Host: localhost:8080
 Content-Type: application/json
 
@@ -40,31 +40,31 @@ Content-Type: application/json
 }
 
 ### delete
-DELETE /person/1
+DELETE /persons/1
 Host: localhost:8080
 
 ### read
-GET /person/1?preload[status]=true
+GET /persons/1?preload[status]=true
 Host: localhost:8080
 Accept: application/json
 
 ### patch
-PATCH /person/1?preload[naming]=pussy
+PATCH /persons/1?preload[naming]=pussy
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json
 
 {
-    "age": 42,
+    "age": 43,
     "pets[0].name": "Rudolf"
 }
 
 ### Person meta
-GET /person/_meta
+GET /persons/_meta
 Host: localhost:8080
 
 ### Delete a pet
-DELETE /pets/5
+DELETE /pets/2
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json

@@ -158,18 +158,22 @@ func (s *storage) Patch(id string, data map[string]any, preload map[string]strin
 }
 
 func (s *storage) preloadQuery(query *gorm.DB, preload map[string]string) *gorm.DB {
-	// each pair represents a named preload with an optional value into a condition
-	for name, conditionValue := range preload {
-		// fetch the named preload from the entity
-		querySpecs := s.entity.Preload(name)
+	preloadSupport, ok := s.entity.(model.PreloadSupport)
 
-		// for each field in the spec apply Preload
-		for field, config := range querySpecs {
-			if config.Converter == nil {
-				config.Converter = func(s string) any { return s }
+	if ok {
+		// each pair represents a named preload with an optional value into a condition
+		for name, conditionValue := range preload {
+			// fetch the named preload from the entity
+			querySpecs := preloadSupport.Preload(name)
+
+			// for each field in the spec apply Preload
+			for field, config := range querySpecs {
+				if config.Converter == nil {
+					config.Converter = func(s string) any { return s }
+				}
+
+				query = query.Preload(field, config.Condition, config.Converter(conditionValue))
 			}
-
-			query = query.Preload(field, config.Condition, config.Converter(conditionValue))
 		}
 	}
 

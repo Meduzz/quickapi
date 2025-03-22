@@ -4,9 +4,9 @@ The idea is to create restlike apis quickly...ier.
 
 As you can see in the example folder, it's focused around your go struct. The struct defines both the api and the domain (and validation). 
 
-You then wrap your struct in an `model.Entity` by calling the `model.NewEntity`-function (or `model.NewJsonEntity`).
+Youe struct must implement the `model.Entity` interface, it can also optionally implement the `model.PreloadSupport` to preload child collection and `model.ScopeSupport` to support more fancy filtering.
 
-The lib then applies a thin layer to turn the `model.Entity` into an api that persists data (via Gin and Gorm).
+The lib then turn your structs into an api that persists data (via Gin and Gorm).
 
 ### The fork in the road
 
@@ -19,64 +19,50 @@ Both method will require you to provide the gorm.DB connection. And `GinStarter`
 
 ## Entity
 
-The entity abstraction, allows us to tie it to a path in the api and also tie any filters to that entity.
+The entity abstraction, forces you to provide some metadata and utility for your entity.
 
 *Flavours*
 
-* Theres normal mode, which means your struct represents your table.
-* And there's JSON, which means your struct represents you data, quickapi owns your table, and your struct is stored as json.
+* Theres normal mode, which means your struct represents your entire table.
+* And there's JSON mode, where your struct represents the data field and quickapi owns the table (ie your struct is stored as json).
 
-Entities are created through `model.New(Json)Entity[<struct>](name:string, preload:model.PreloadDelegate, [...filters:*model.NamedFilter])` function.
+### Where (built in)
 
-- `name` will be used for the api-path.
-- `preload` is a function that returns the preload config to use (if the correct preload paramters was provided)
-- `filters` can be triggered when the api is called via query-params.
+The Where api allows you to send simple equality filters, ie: `GET /entity/?where[field]=value`.
 
-See next section on how to create filters.
+### Preload (opt in)
 
-### Preload
-
-Preload is a Gorm api to load "child" collections. Like in the `example/`, to load the `pets`-collection when fetching a `person` preload can be used. The Gorm preload can take a condition, like `alive = ?`. Preload is exposed as public api, like `where` and `sort`.
+Preload is a Gorm api to load "child" collections. Like in the `example/normal`, to load the `pets`-collection when fetching a `person` preload can be used. The Gorm preload can take a condition, like `alive = ?`. Preload is exposed as public api, like `where` and `sort`.
 
 To avoid sql injection, the conditions used in preload is predefined. Multiple conditions can be grouped together, which can be both a blessing and a curse. At the same time, multiple of these groups of preloads can be called in the same api-call.
 
 In each api call, the group can take one parameter. And if there's no preload data in the call, no preloading will be done.
 
-### Filters
+### Scopes (opt in)
 
-While filters can look awefully involved, they are quite simple but yet powerful. The biggest drawback of them is that you have to opt in to them when you call the api.
+While the where api will take you far. The Scopes api (via `model.ScopeSupport`) gives you full control over what is queried and how.
 
-In the example-folder I use filters to preload the one-to-many `Pet`-collection when loading anything from the `Person`-collection.
+When you add ScopeSupport to a struct, quickapi will attempt to apply all the named filter on Search queries. Note that you must opt in to use a filter when executing the query to the api.
 
-To create a filter use the `model.NewFilter(name:string, handler:model..Scope)`-function. It takes a name (which is the  name of the query-param where we will look for data). The second param is a `model.Scope`-function (`func(map[string]string) model.Hook`). This is a higher order function that accepts a `map[string]string` and returns a function `model.Hook` which in turn is defined as `func(*gorm.DB) *gorm.DB`. The returned function is used as a scope inside the query to Gorm.
-
-Lets define a filter:
-```
-    // define the handler function
-    func preloadPets() model.Scope {
-        return func(m map[string]string) model.Hook {
-            return func(query *gorm.DB) *gorm.DB {
-                // ... use the data in the map m to change the query
-                return query
-            }
-        }
+Ex: 
+Named filter = `olderThan`
+Scope is defined like this:
+```go
+func(queryMap map[string]string) model.Hook {
+    return func(db *gorm.DB) (*gorm.DB) {
+        return db.Where("age > ?", queryMap["age"])
     }
-
-    // create the filter
-    filter := model.NewFilter("pets", preloadPets())
-
-    // use filter when creating entities
-    person := model..NewEntity[Person]("person", filter)
-    ...
+}
 ```
 
-And now activate the filter in an api-call:
-```
-    GET /person/?pets[param]=value
-    ...
-```
+Trigger usage of filter in query like so:
+`GET /entity/?olderThan[age]=18`
 
-Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_]` will work).
+Scopes also give you a good toolbox if you opt to use json tables. Becuase they are clonky to query with where api alone.
+
+### Sort (built in)
+
+The sort api is very similar to the Where api. Ie: `GET /entity/?sort[field]=asc|desc`. Keep in mind that it can have a performance impact on big tables and most likely wont work on json data.
 
 ## Known issues
 
@@ -90,3 +76,4 @@ Note that it is not enough to include `?pets` (neither is `?pets[]` but `?pets[_
  
 * select fields in queries?
 > not very important, would also require rpc to have a full api.
+* api + interfaces for authorization

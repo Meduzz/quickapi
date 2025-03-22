@@ -9,16 +9,37 @@ import (
 
 type (
 	Person struct {
-		Name string `json:"name"`
-		Age  int    `json:"age"`
-		Pets []*Pet `json:"pets,omitempty"`
+		FullName string `json:"name"`
+		Age      int    `json:"age"`
+		Pets     []*Pet `json:"pets,omitempty"`
 	}
 
 	Pet struct {
-		Name  string `json:"name"`
-		Alive bool   `json:"alive"`
+		FullName string `json:"name"`
+		Alive    bool   `json:"alive"`
 	}
 )
+
+var (
+	_ model.Entity = Person{}
+)
+
+// Implementing the Entity interface for Person
+func (p Person) Name() string {
+	return "persons"
+}
+
+func (p Person) Create() any {
+	return &Person{}
+}
+
+func (p Person) CreateArray() any {
+	return []*Person{}
+}
+
+func (p Person) Kind() model.EntityKind {
+	return model.JsonKind
+}
 
 func main() {
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
@@ -27,8 +48,7 @@ func main() {
 		panic(err)
 	}
 
-	start := quickapi.GinStarter(db,
-		model.NewJsonEntity[Person]("person"))
+	start := quickapi.GinStarter(db, Person{})
 
 	err = start.Execute()
 

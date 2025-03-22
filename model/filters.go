@@ -20,7 +20,7 @@ type (
 	}
 )
 
-// NewFilter creates a new filter for you. Name is the name of the queryMap. See examples for ... just that.
+// NewFilter creates a new filter for you. Name is the name of the queryMap.
 func NewFilter(name string, handler Scope) *NamedFilter {
 	return &NamedFilter{
 		Name:  name,
