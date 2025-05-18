@@ -3,8 +3,10 @@ package http
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/Meduzz/helper/http/herror"
+	"github.com/Meduzz/quickapi/api"
 	"github.com/Meduzz/quickapi/model"
 	"github.com/Meduzz/quickapi/storage"
 	"github.com/gin-gonic/gin"
@@ -13,19 +15,19 @@ import (
 
 type (
 	router struct {
-		storer storage.Storer
-		entity model.Entity
+		storage storage.Storage
+		entity  model.Entity
 	}
 )
 
 func newRouter(db *gorm.DB, entity model.Entity) (*router, error) {
-	storer, err := storage.CreateStorage(db, entity)
+	store, err := storage.CreateStorage(db, entity)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &router{storer, entity}, nil
+	return &router{store, entity}, nil
 }
 
 func (r *router) Create(ctx *gin.Context) {
@@ -38,10 +40,10 @@ func (r *router) Create(ctx *gin.Context) {
 		return
 	}
 
-	entity, err = r.storer.Create(entity)
+	req := api.NewCreate(entity)
+	entity, err = r.storage.Create(req)
 
 	if err != nil {
-		// TODO here be dragons
 		println("creating row threw error", err.Error())
 		code := herror.CodeFromError(err)
 
@@ -56,10 +58,11 @@ func (r *router) Read(ctx *gin.Context) {
 	id := ctx.Param("id")
 	preload := ctx.QueryMap("preload")
 
-	entity, err := r.storer.Read(id, preload)
+	req := api.NewRead(id, preload)
+
+	entity, err := r.storage.Read(req)
 
 	if err != nil {
-		// TODO here be dragons
 		println("reading row threw error", err.Error())
 		code := herror.CodeFromError(err)
 
@@ -82,10 +85,10 @@ func (r *router) Update(ctx *gin.Context) {
 		return
 	}
 
-	entity, err = r.storer.Update(id, entity)
+	req := api.NewUpate(id, entity)
+	entity, err = r.storage.Update(req)
 
 	if err != nil {
-		// TODO here be dragons
 		println("updating row threw error", err.Error())
 		code := herror.CodeFromError(err)
 
@@ -98,10 +101,11 @@ func (r *router) Update(ctx *gin.Context) {
 
 func (r *router) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
-	err := r.storer.Delete(id)
+
+	req := api.NewDelete(id)
+	err := r.storage.Delete(req)
 
 	if err != nil {
-		// TOOD here be dragons
 		println("deleting row threw error", err.Error())
 		code := herror.CodeFromError(err)
 
@@ -152,11 +156,18 @@ func (r *router) Search(ctx *gin.Context) {
 		hooks = createScopes(ctx, scopeSupport.Scopes())
 	}
 
-	data, err := r.storer.Search(iSkip, iTake, where, sort, preload, hooks...)
+	req := api.NewSearch(iSkip, iTake, where, sort, preload, hooks)
+
+	data, err := r.storage.Search(req)
 
 	if err != nil {
-		// TODO here be dragons
 		println("searching for data threw error", err.Error())
+
+		if strings.Contains(err.Error(), "syntax error") || strings.Contains(err.Error(), "no such column") {
+			ctx.AbortWithStatus(400)
+			return
+		}
+
 		code := herror.CodeFromError(err)
 
 		ctx.AbortWithStatus(code)
@@ -179,11 +190,18 @@ func (r *router) Patch(ctx *gin.Context) {
 	}
 
 	preload := ctx.QueryMap("preload")
-	entity, err := r.storer.Patch(id, data, preload)
+
+	req := api.NewPatch(id, data, preload)
+	entity, err := r.storage.Patch(req)
 
 	if err != nil {
-		// TODO here be dragons
 		println("patching data threw error", err.Error())
+
+		if strings.Contains(err.Error(), "syntax error") {
+			ctx.AbortWithStatus(400)
+			return
+		}
+
 		code := herror.CodeFromError(err)
 
 		ctx.AbortWithStatus(code)

@@ -21,20 +21,20 @@ type (
 		Data    datatypes.JSON `json:"data" gorm:"serializer:json"`
 	}
 
-	jsonStore struct {
+	jsonStorage struct {
 		db     *gorm.DB
 		entity model.Entity
 	}
 )
 
 func NewJsonStore(db *gorm.DB, entity model.Entity) Storer {
-	return &jsonStore{
+	return &jsonStorage{
 		db:     db,
 		entity: entity,
 	}
 }
 
-func (j *jsonStore) Create(data any) (any, error) {
+func (j *jsonStorage) Create(data any) (any, error) {
 	bs, err := json.Marshal(data)
 
 	if err != nil {
@@ -55,7 +55,7 @@ func (j *jsonStore) Create(data any) (any, error) {
 	return entity, nil
 }
 
-func (j *jsonStore) Read(id string, preload map[string]string) (any, error) {
+func (j *jsonStorage) Read(id string, preload map[string]string) (any, error) {
 	entity := &JsonTable{}
 	err := j.db.
 		Table(j.entity.Name()).
@@ -72,7 +72,7 @@ func (j *jsonStore) Read(id string, preload map[string]string) (any, error) {
 	return entity, nil
 }
 
-func (j *jsonStore) Update(id string, data any) (any, error) {
+func (j *jsonStorage) Update(id string, data any) (any, error) {
 	entity := &JsonTable{}
 	err := j.db.
 		Table(j.entity.Name()).
@@ -105,7 +105,7 @@ func (j *jsonStore) Update(id string, data any) (any, error) {
 	return entity, nil
 }
 
-func (j *jsonStore) Delete(id string) error {
+func (j *jsonStorage) Delete(id string) error {
 	entity := &JsonTable{}
 	err := j.db.
 		Table(j.entity.Name()).
@@ -122,7 +122,7 @@ func (j *jsonStore) Delete(id string) error {
 	return nil
 }
 
-func (j *jsonStore) Search(skip int, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks ...model.Hook) (any, error) {
+func (j *jsonStorage) Search(skip int, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks ...model.Hook) (any, error) {
 	data := make([]*JsonTable, 0)
 
 	query := j.db.
@@ -165,7 +165,7 @@ func (j *jsonStore) Search(skip int, take int, where map[string]string, sort map
 	return data, nil
 }
 
-func (j *jsonStore) Patch(id string, data map[string]any, preload map[string]string) (any, error) {
+func (j *jsonStorage) Patch(id string, data map[string]any, preload map[string]string) (any, error) {
 	entity := &JsonTable{}
 	query := j.db.
 		Table(j.entity.Name()).

@@ -13,17 +13,17 @@ import (
 )
 
 type (
-	storage struct {
+	normalStorage struct {
 		db     *gorm.DB
 		entity model.Entity
 	}
 )
 
 func NewStorer(db *gorm.DB, entity model.Entity) Storer {
-	return &storage{db, entity}
+	return &normalStorage{db, entity}
 }
 
-func (s *storage) Create(entity any) (any, error) {
+func (s *normalStorage) Create(entity any) (any, error) {
 	err := s.db.
 		Table(s.entity.Name()).
 		Create(entity).Error
@@ -35,7 +35,7 @@ func (s *storage) Create(entity any) (any, error) {
 	return entity, nil
 }
 
-func (s *storage) Read(id string, preload map[string]string) (any, error) {
+func (s *normalStorage) Read(id string, preload map[string]string) (any, error) {
 	entity := s.entity.Create()
 
 	query := s.preloadQuery(s.db, preload)
@@ -54,7 +54,7 @@ func (s *storage) Read(id string, preload map[string]string) (any, error) {
 	return entity, nil
 }
 
-func (s *storage) Update(id string, entity any) (any, error) {
+func (s *normalStorage) Update(id string, entity any) (any, error) {
 	query := s.db.Session(&gorm.Session{FullSaveAssociations: true})
 	err := query.
 		Table(s.entity.Name()).
@@ -71,7 +71,7 @@ func (s *storage) Update(id string, entity any) (any, error) {
 	return entity, nil
 }
 
-func (s *storage) Delete(id string) error {
+func (s *normalStorage) Delete(id string) error {
 	entity := s.entity.Create()
 	query := s.db.
 		Table(s.entity.Name()).
@@ -92,7 +92,7 @@ func (s *storage) Delete(id string) error {
 	return nil
 }
 
-func (s *storage) Search(skip, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks ...model.Hook) (any, error) {
+func (s *normalStorage) Search(skip, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks ...model.Hook) (any, error) {
 	data := s.entity.CreateArray()
 
 	query := s.db.
@@ -129,7 +129,7 @@ func (s *storage) Search(skip, take int, where map[string]string, sort map[strin
 	return data, nil
 }
 
-func (s *storage) Patch(id string, data map[string]any, preload map[string]string) (any, error) {
+func (s *normalStorage) Patch(id string, data map[string]any, preload map[string]string) (any, error) {
 	entity := s.entity.Create()
 	err := s.db.
 		Table(s.entity.Name()).
@@ -157,7 +157,7 @@ func (s *storage) Patch(id string, data map[string]any, preload map[string]strin
 	return entity, nil
 }
 
-func (s *storage) preloadQuery(query *gorm.DB, preload map[string]string) *gorm.DB {
+func (s *normalStorage) preloadQuery(query *gorm.DB, preload map[string]string) *gorm.DB {
 	preloadSupport, ok := s.entity.(model.PreloadSupport)
 
 	if ok {
