@@ -172,6 +172,10 @@ func (s *storage) preloadQuery(query *gorm.DB, preload map[string]string) *gorm.
 					config.Converter = func(s string) any { return s }
 				}
 
+				if config.Condition == "" {
+					config.Condition = "1 = 1"
+				}
+
 				query = query.Preload(field, config.Condition, config.Converter(conditionValue))
 			}
 		}

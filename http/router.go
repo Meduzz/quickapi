@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -19,17 +18,14 @@ type (
 	}
 )
 
-func newRouter(db *gorm.DB, entity model.Entity) *router {
-	var storer storage.Storer
-	if entity.Kind() == model.NormalKind {
-		storer = storage.NewStorer(db, entity)
-	} else if entity.Kind() == model.JsonKind {
-		storer = storage.NewJsonStore(db, entity)
-	} else {
-		panic(fmt.Sprintf("Unknown entity kind: %s", entity.Kind()))
+func newRouter(db *gorm.DB, entity model.Entity) (*router, error) {
+	storer, err := storage.CreateStorage(db, entity)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return &router{storer, entity}
+	return &router{storer, entity}, nil
 }
 
 func (r *router) Create(ctx *gin.Context) {

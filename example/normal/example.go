@@ -114,6 +114,12 @@ var preload = map[string]map[string]*model.PreloadConfig{
 			Converter: nil,
 		},
 	},
+	"plain": {
+		"Pets": {
+			Condition: "",
+			Converter: nil,
+		},
+	},
 }
 
 /*

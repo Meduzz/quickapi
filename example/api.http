@@ -18,7 +18,7 @@ Content-Type: application/json
 }
 
 ### list persons
-GET /persons/?sort[age]=asc&preload[naming]=pussy&where[name]=Test Testsson
+GET /persons/?sort[age]=asc&preload[naming]=pussy&where[full_name]=Test Testsson
 Host: localhost:8080
 Accept: application/json
 
@@ -44,7 +44,7 @@ DELETE /persons/1
 Host: localhost:8080
 
 ### read
-GET /persons/1?preload[status]=true
+GET /persons/1?preload[plain]=true
 Host: localhost:8080
 Accept: application/json
 

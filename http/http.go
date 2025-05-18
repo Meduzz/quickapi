@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Meduzz/helper/fp/result"
 	"github.com/Meduzz/helper/fp/slice"
 	"github.com/Meduzz/quickapi/model"
 	"github.com/gin-gonic/gin"
@@ -39,29 +40,55 @@ type (
 
 // For sets up routing for T in the provided router group
 // but leaves up to you to deal with the server and run migrations.
-func For(db *gorm.DB, e *gin.RouterGroup, entities ...model.Entity) {
+func For(db *gorm.DB, e *gin.RouterGroup, entities ...model.Entity) error {
 	discovery := &Discovery{}
 
-	slice.ForEach(entities, func(entity model.Entity) {
-		r := newRouter(db, entity)
+	listOfMaybeNames := slice.Map(entities, func(entity model.Entity) *result.Operation[string] {
+		aRouter := result.Execute(newRouter(db, entity))
 
-		discovery.Entities = append(discovery.Entities, entity.Name())
+		return result.Map(aRouter, func(r *router) string {
+			api := e.Group(fmt.Sprintf("/%s", entity.Name()))
 
-		api := e.Group(fmt.Sprintf("/%s", entity.Name()))
+			// setup REST endpoints
+			api.POST("/", r.Create)                          // create
+			api.GET("/:id", r.Read)                          // read
+			api.PUT("/:id", r.Update)                        // update
+			api.DELETE("/:id", r.Delete)                     // delete
+			api.GET("/", r.Search)                           // list/search
+			api.PATCH("/:id", r.Patch)                       // patch
+			api.GET("/_meta", serveMeta(entityMeta(entity))) // TODO make this opt-in too?
 
-		// setup REST endpoints
-		api.POST("/", r.Create)                          // create
-		api.GET("/:id", r.Read)                          // read
-		api.PUT("/:id", r.Update)                        // update
-		api.DELETE("/:id", r.Delete)                     // delete
-		api.GET("/", r.Search)                           // list/search
-		api.PATCH("/:id", r.Patch)                       // patch
-		api.GET("/_meta", serveMeta(entityMeta(entity))) // TODO make this opt-in too?
+			return entity.Name()
+		})
 	})
+
+	agg := result.Execute(make([]string, 0), nil)
+
+	maybeListOfNames := slice.Fold(listOfMaybeNames, agg, func(op *result.Operation[string], agg *result.Operation[[]string]) *result.Operation[[]string] {
+		return result.Then(agg, func(n []string) ([]string, error) {
+			v, err := op.Get()
+
+			if err != nil {
+				return nil, err
+			}
+
+			return append(n, v), nil
+		})
+	})
+
+	names, err := maybeListOfNames.Get()
+
+	if err != nil {
+		return err
+	}
+
+	discovery.Entities = names
 
 	e.GET("/_discover", func(ctx *gin.Context) {
 		ctx.JSON(200, discovery)
 	})
+
+	return nil
 }
 
 func createScopes(ctx *gin.Context, filters []*model.NamedFilter) []model.Hook {
