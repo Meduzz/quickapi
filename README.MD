@@ -21,11 +21,6 @@ Both method will require you to provide the gorm.DB connection. And `GinStarter`
 
 The entity abstraction, forces you to provide some metadata and utility for your entity.
 
-*Flavours*
-
-* Theres normal mode, which means your struct represents your entire table.
-* And there's JSON mode, where your struct represents the data field and quickapi owns the table (ie your struct is stored as json).
-
 ### Where (built in)
 
 The Where api allows you to send simple equality filters, ie: `GET /entity/?where[field]=value`.
@@ -44,7 +39,7 @@ While the where api will take you far. The Scopes api (via `model.ScopeSupport`)
 
 When you add ScopeSupport to a struct, quickapi will attempt to apply all the named filter on Search queries. Note that you must opt in to use a filter when executing the query to the api.
 
-Ex: 
+Ex:
 Named filter = `olderThan`
 Scope is defined like this:
 ```go
@@ -68,9 +63,6 @@ The sort api is very similar to the Where api. Ie: `GET /entity/?sort[field]=asc
 
  * one-to-many *
  Collections defined as one-to-many are created and updated from the owner collection, but not removed (on certain gorm drivers and setups, ie read up in gorm how to setup your relations correctly). The work around for the moment is to also add an api for the child collection. (which also is the only way to get the child collection migrated (setup in db))
-
- * json entity *
- The update method here will replace the entire document with what you send. If you only intend to update individual fields, use patch.
 
  ## TODO
  
