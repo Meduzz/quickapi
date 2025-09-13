@@ -23,24 +23,24 @@ Host: localhost:8080
 Accept: application/json
 
 ### update
-PUT /persons/1
+PUT /persons/1?version[cas]=2934376705174364337
 Host: localhost:8080
 Content-Type: application/json
 
 {
   "id": 1,
-    "name": "Test Testzon",
-    "age": 43,
-    "pets": [
-      {
-        "name": "Fidoh",
-        "alive": true
-      }
-    ]
+  "name": "Test Testzon",
+  "age": 43,
+  "pets": [
+    {
+      "name": "Fidoh",
+      "alive": true
+    }
+  ]
 }
 
 ### delete
-DELETE /persons/1
+DELETE /persons/1?version[cas]=0
 Host: localhost:8080
 
 ### read
@@ -49,14 +49,13 @@ Host: localhost:8080
 Accept: application/json
 
 ### patch
-PATCH /persons/1?preload[naming]=pussy
+PATCH /persons/1?version[cas]=2905387365997318812
 Host: localhost:8080
 Content-Type: application/json
 Accept: application/json
 
 {
-    "age": 43,
-    "pets[0].name": "Rudolf"
+    "age": 43
 }
 
 ### Person meta

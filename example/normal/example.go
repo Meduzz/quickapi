@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"strconv"
 
 	"github.com/Meduzz/quickapi"
@@ -14,6 +15,7 @@ type (
 		ID       int64  `gorm:"autoIncrement" json:"id,omitempty"`
 		FullName string `gorm:"size:32" json:"name" binding:"required"`
 		Age      int    `json:"age" binding:"gt=-1"`
+		CAS      int64  `json:"cas,omitempty"`
 		Pets     []*Pet `json:"pets,omitempty"` // gorm:"constraint:OnDelete:CASCADE" works in PG but not sqlite.
 	}
 
@@ -26,9 +28,11 @@ type (
 )
 
 var (
-	_ model.Entity         = Person{}
-	_ model.Entity         = Pet{}
-	_ model.PreloadSupport = Person{}
+	_      model.Entity         = Person{}
+	_      model.Entity         = Pet{}
+	_      model.PreloadSupport = Person{}
+	_      model.ScopeSupport   = Person{}
+	random                      = rand.New(rand.NewSource(int64(rand.Int31())))
 )
 
 func (p Person) Kind() model.EntityKind {
@@ -55,6 +59,38 @@ func (p Person) Preload(key string) map[string]*model.PreloadConfig {
 	}
 
 	return it
+}
+
+// implement optimistic locking..ish
+func (p Person) Scopes() []*model.NamedFilter {
+	return []*model.NamedFilter{
+		{
+			Name: "version",
+			Scope: func(m map[string]string) model.Hook {
+				return func(d *gorm.DB) *gorm.DB {
+					cas, ok := m["cas"]
+
+					if !ok {
+						return d
+					}
+
+					iCas, err := strconv.Atoi(cas)
+
+					if err != nil {
+						return d
+					}
+
+					return d.Where("`cas` = ?", iCas)
+				}
+			},
+		},
+	}
+}
+
+// update cas on save
+func (p *Person) BeforeSave(tx *gorm.DB) error {
+	tx.Statement.SetColumn("CAS", random.Int63())
+	return nil
 }
 
 func (p Pet) Kind() model.EntityKind {

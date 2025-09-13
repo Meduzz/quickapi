@@ -126,25 +126,7 @@ func entityMeta(entity model.Entity) any {
 	}
 
 	if v.Kind() == reflect.Struct {
-
-		if entity.Kind() == model.JsonKind {
-			root := &Entity{}
-			root.Name = "jsonTable"
-			root.Fields = append(root.Fields, generateSimpleField("id", "int64"), generateSimpleField("created", "int64"), generateSimpleField("udpated", "int64"))
-
-			dataField := &Field{}
-			dataField.Name = "data"
-			dataField.Entity = parseStruct(v)
-			dataField.Array = false
-			dataField.Map = false
-			dataField.Type = "struct"
-
-			root.Fields = append(root.Fields, dataField)
-
-			def = root
-		} else {
-			def = parseStruct(v)
-		}
+		def = parseStruct(v)
 	} else {
 		t := v.Type()
 		def = t.String()
@@ -213,17 +195,6 @@ func parseField(rf reflect.StructField) *Field {
 
 		f.Entity = parseStruct(it)
 	}
-
-	return f
-}
-
-func generateSimpleField(name, typ string) *Field {
-	f := &Field{}
-
-	f.Name = name
-	f.Type = typ
-	f.Array = false
-	f.Map = false
 
 	return f
 }

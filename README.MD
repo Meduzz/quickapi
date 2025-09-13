@@ -77,3 +77,6 @@ The sort api is very similar to the Where api. Ie: `GET /entity/?sort[field]=asc
 * select fields in queries?
 > not very important, would also require rpc to have a full api.
 * api + interfaces for authorization
+> prolly part of a larger infrastructure change, like activating engine features.
+* batch apis. So a way to create/update/delete many. And a way to fetch many by their ids.
+> prolly also part of a larger infrastructure change.

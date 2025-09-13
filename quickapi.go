@@ -7,7 +7,6 @@ import (
 	"github.com/Meduzz/helper/fp/slice"
 	"github.com/Meduzz/quickapi/http"
 	"github.com/Meduzz/quickapi/model"
-	"github.com/Meduzz/quickapi/storage"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
@@ -45,8 +44,6 @@ func Migrate(db *gorm.DB, entities ...model.Entity) error {
 	errorz := slice.Map(entities, func(e model.Entity) error {
 		if e.Kind() == model.NormalKind {
 			return db.Table(e.Name()).AutoMigrate(e.Create())
-		} else if e.Kind() == model.JsonKind {
-			return db.Table(e.Name()).AutoMigrate(&storage.JsonTable{})
 		} else {
 			return fmt.Errorf("unknown entity kind: %s", e.Kind())
 		}

@@ -54,11 +54,20 @@ func (s *normalStorage) Read(id string, preload map[string]string) (any, error) 
 	return entity, nil
 }
 
-func (s *normalStorage) Update(id string, entity any) (any, error) {
+func (s *normalStorage) Update(id string, entity any, hooks []model.Hook) (any, error) {
 	query := s.db.Session(&gorm.Session{FullSaveAssociations: true})
-	err := query.
+	query = query.
+		Model(entity).
 		Table(s.entity.Name()).
-		Save(entity).Error
+		Where("id = ?", id).
+		Clauses(clause.Returning{})
+
+	slice.ForEach(hooks, func(hook model.Hook) {
+		query = query.Scopes(hook)
+	})
+
+	result := query.Updates(entity)
+	err := result.Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -68,18 +77,25 @@ func (s *normalStorage) Update(id string, entity any) (any, error) {
 		return nil, err
 	}
 
+	if result.RowsAffected == 0 {
+		return nil, herror.ErrConflict
+	}
+
 	return entity, nil
 }
 
-func (s *normalStorage) Delete(id string) error {
+func (s *normalStorage) Delete(id string, hooks []model.Hook) error {
 	entity := s.entity.Create()
 	query := s.db.
 		Table(s.entity.Name()).
 		Select(clause.Associations)
 
-	err := query.
-		Table(s.entity.Name()).
-		Delete(entity, id).Error
+	slice.ForEach(hooks, func(hook model.Hook) {
+		query = query.Scopes(hook)
+	})
+
+	result := query.Delete(entity, id)
+	err := result.Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -89,10 +105,14 @@ func (s *normalStorage) Delete(id string) error {
 		return err
 	}
 
+	if result.RowsAffected == 0 {
+		return herror.ErrConflict
+	}
+
 	return nil
 }
 
-func (s *normalStorage) Search(skip, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks ...model.Hook) (any, error) {
+func (s *normalStorage) Search(skip, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks []model.Hook) (any, error) {
 	data := s.entity.CreateArray()
 
 	query := s.db.
@@ -129,13 +149,20 @@ func (s *normalStorage) Search(skip, take int, where map[string]string, sort map
 	return data, nil
 }
 
-func (s *normalStorage) Patch(id string, data map[string]any, preload map[string]string) (any, error) {
+func (s *normalStorage) Patch(id string, data map[string]any, preload map[string]string, hooks []model.Hook) (any, error) {
 	entity := s.entity.Create()
-	err := s.db.
+	query := s.db.
 		Table(s.entity.Name()).
 		Model(entity).
 		Where("id = ?", id).
-		Updates(data).Error
+		Clauses(clause.Returning{})
+
+	slice.ForEach(hooks, func(hook model.Hook) {
+		query = query.Scopes(hook)
+	})
+
+	result := query.Updates(data)
+	err := result.Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -145,13 +172,8 @@ func (s *normalStorage) Patch(id string, data map[string]any, preload map[string
 		return nil, err
 	}
 
-	query := s.preloadQuery(s.db, preload)
-	err = query.
-		Table(s.entity.Name()).
-		Find(entity, id).Error
-
-	if err != nil {
-		return nil, err
+	if result.RowsAffected == 0 {
+		return nil, herror.ErrConflict
 	}
 
 	return entity, nil

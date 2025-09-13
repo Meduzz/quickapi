@@ -32,6 +32,5 @@ type (
 )
 
 const (
-	JsonKind   = EntityKind("json")
 	NormalKind = EntityKind("normal")
 )

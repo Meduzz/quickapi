@@ -15,10 +15,12 @@ type (
 	Update struct {
 		ID     string
 		Entity any
+		Hooks  []model.Hook
 	}
 
 	Delete struct {
-		ID string
+		ID    string
+		Hooks []model.Hook
 	}
 
 	Search struct {
@@ -34,6 +36,7 @@ type (
 		ID      string
 		Data    map[string]any
 		Preload map[string]string
+		Hooks   []model.Hook
 	}
 )
 
@@ -45,18 +48,18 @@ func NewRead(id string, preload map[string]string) *Read {
 	return &Read{ID: id, Preload: preload}
 }
 
-func NewUpate(id string, it any) *Update {
-	return &Update{ID: id, Entity: it}
+func NewUpate(id string, it any, hooks []model.Hook) *Update {
+	return &Update{ID: id, Entity: it, Hooks: hooks}
 }
 
-func NewDelete(id string) *Delete {
-	return &Delete{ID: id}
+func NewDelete(id string, hooks []model.Hook) *Delete {
+	return &Delete{ID: id, Hooks: hooks}
 }
 
 func NewSearch(skip int, take int, where map[string]string, sort map[string]string, preload map[string]string, hooks []model.Hook) *Search {
 	return &Search{Skip: skip, Take: take, Where: where, Sort: sort, Preload: preload, Hooks: hooks}
 }
 
-func NewPatch(id string, data map[string]any, preload map[string]string) *Patch {
-	return &Patch{ID: id, Data: data, Preload: preload}
+func NewPatch(id string, data map[string]any, preload map[string]string, hooks []model.Hook) *Patch {
+	return &Patch{ID: id, Data: data, Preload: preload, Hooks: hooks}
 }

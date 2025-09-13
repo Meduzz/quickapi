@@ -85,7 +85,15 @@ func (r *router) Update(ctx *gin.Context) {
 		return
 	}
 
-	req := api.NewUpate(id, entity)
+	hooks := make([]model.Hook, 0)
+
+	scopeSupport, ok := r.entity.(model.ScopeSupport)
+
+	if ok {
+		hooks = createScopes(ctx, scopeSupport.Scopes())
+	}
+
+	req := api.NewUpate(id, entity, hooks)
 	entity, err = r.storage.Update(req)
 
 	if err != nil {
@@ -102,7 +110,15 @@ func (r *router) Update(ctx *gin.Context) {
 func (r *router) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	req := api.NewDelete(id)
+	hooks := make([]model.Hook, 0)
+
+	scopeSupport, ok := r.entity.(model.ScopeSupport)
+
+	if ok {
+		hooks = createScopes(ctx, scopeSupport.Scopes())
+	}
+
+	req := api.NewDelete(id, hooks)
 	err := r.storage.Delete(req)
 
 	if err != nil {
@@ -191,7 +207,15 @@ func (r *router) Patch(ctx *gin.Context) {
 
 	preload := ctx.QueryMap("preload")
 
-	req := api.NewPatch(id, data, preload)
+	hooks := make([]model.Hook, 0)
+
+	scopeSupport, ok := r.entity.(model.ScopeSupport)
+
+	if ok {
+		hooks = createScopes(ctx, scopeSupport.Scopes())
+	}
+
+	req := api.NewPatch(id, data, preload, hooks)
 	entity, err := r.storage.Patch(req)
 
 	if err != nil {

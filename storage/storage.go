@@ -12,10 +12,10 @@ type (
 	Storer interface {
 		Create(any) (any, error)
 		Read(string, map[string]string) (any, error)
-		Update(string, any) (any, error)
-		Delete(string) error
-		Search(int, int, map[string]string, map[string]string, map[string]string, ...model.Hook) (any, error)
-		Patch(string, map[string]any, map[string]string) (any, error)
+		Update(string, any, []model.Hook) (any, error)
+		Delete(string, []model.Hook) error
+		Search(int, int, map[string]string, map[string]string, map[string]string, []model.Hook) (any, error)
+		Patch(string, map[string]any, map[string]string, []model.Hook) (any, error)
 	}
 
 	Storage interface {
@@ -41,8 +41,6 @@ func CreateStorage(db *gorm.DB, entity model.Entity) (Storage, error) {
 
 	if entity.Kind() == model.NormalKind {
 		storer = NewStorer(db, entity)
-	} else if entity.Kind() == model.JsonKind {
-		storer = NewJsonStore(db, entity)
 	} else {
 		return nil, fmt.Errorf("unknown kind: %s", entity.Kind())
 	}
@@ -59,17 +57,17 @@ func (gs *genericStorage) Read(read *api.Read) (any, error) {
 }
 
 func (gs *genericStorage) Update(update *api.Update) (any, error) {
-	return gs.storer.Update(update.ID, update.Entity)
+	return gs.storer.Update(update.ID, update.Entity, update.Hooks)
 }
 
 func (gs *genericStorage) Delete(delete *api.Delete) error {
-	return gs.storer.Delete(delete.ID)
+	return gs.storer.Delete(delete.ID, delete.Hooks)
 }
 
 func (gs *genericStorage) Search(search *api.Search) (any, error) {
-	return gs.storer.Search(search.Skip, search.Take, search.Where, search.Sort, search.Preload, search.Hooks...)
+	return gs.storer.Search(search.Skip, search.Take, search.Where, search.Sort, search.Preload, search.Hooks)
 }
 
 func (gs *genericStorage) Patch(patch *api.Patch) (any, error) {
-	return gs.storer.Patch(patch.ID, patch.Data, patch.Preload)
+	return gs.storer.Patch(patch.ID, patch.Data, patch.Preload, patch.Hooks)
 }
