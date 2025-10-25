@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Meduzz/helper/fp/result"
 	"github.com/Meduzz/helper/fp/slice"
 	"github.com/Meduzz/quickapi/model"
 	"github.com/gin-gonic/gin"
@@ -43,46 +42,23 @@ type (
 func For(db *gorm.DB, e *gin.RouterGroup, entities ...model.Entity) error {
 	discovery := &Discovery{}
 
-	listOfMaybeNames := slice.Map(entities, func(entity model.Entity) *result.Operation[string] {
-		aRouter := result.Execute(newRouter(db, entity))
+	listOfNames := slice.Map(entities, func(entity model.Entity) string {
+		r := newRouter(db, entity)
+		api := e.Group(fmt.Sprintf("/%s", entity.Name()))
 
-		return result.Map(aRouter, func(r *router) string {
-			api := e.Group(fmt.Sprintf("/%s", entity.Name()))
+		// setup REST endpoints
+		api.POST("/", r.Create)                          // create
+		api.GET("/:id", r.Read)                          // read
+		api.PUT("/:id", r.Update)                        // update
+		api.DELETE("/:id", r.Delete)                     // delete
+		api.GET("/", r.Search)                           // list/search
+		api.PATCH("/:id", r.Patch)                       // patch
+		api.GET("/_meta", serveMeta(entityMeta(entity))) // TODO make this opt-in too?
 
-			// setup REST endpoints
-			api.POST("/", r.Create)                          // create
-			api.GET("/:id", r.Read)                          // read
-			api.PUT("/:id", r.Update)                        // update
-			api.DELETE("/:id", r.Delete)                     // delete
-			api.GET("/", r.Search)                           // list/search
-			api.PATCH("/:id", r.Patch)                       // patch
-			api.GET("/_meta", serveMeta(entityMeta(entity))) // TODO make this opt-in too?
-
-			return entity.Name()
-		})
+		return entity.Name()
 	})
 
-	agg := result.Execute(make([]string, 0), nil)
-
-	maybeListOfNames := slice.Fold(listOfMaybeNames, agg, func(op *result.Operation[string], agg *result.Operation[[]string]) *result.Operation[[]string] {
-		return result.Then(agg, func(n []string) ([]string, error) {
-			v, err := op.Get()
-
-			if err != nil {
-				return nil, err
-			}
-
-			return append(n, v), nil
-		})
-	})
-
-	names, err := maybeListOfNames.Get()
-
-	if err != nil {
-		return err
-	}
-
-	discovery.Entities = names
+	discovery.Entities = listOfNames
 
 	e.GET("/_discover", func(ctx *gin.Context) {
 		ctx.JSON(200, discovery)

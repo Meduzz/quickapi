@@ -20,14 +20,10 @@ type (
 	}
 )
 
-func newRouter(db *gorm.DB, entity model.Entity) (*router, error) {
-	store, err := storage.CreateStorage(db, entity)
+func newRouter(db *gorm.DB, entity model.Entity) *router {
+	store := storage.CreateStorage(db, entity)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &router{store, entity}, nil
+	return &router{store, entity}
 }
 
 func (r *router) Create(ctx *gin.Context) {

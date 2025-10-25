@@ -34,10 +34,10 @@ var (
 	_ Storage = (*genericStorage)(nil)
 )
 
-func CreateStorage(db *gorm.DB, entity model.Entity) (Storage, error) {
+func CreateStorage(db *gorm.DB, entity model.Entity) Storage {
 	storer := NewStorer(db, entity)
 
-	return &genericStorage{storer}, nil
+	return &genericStorage{storer}
 }
 
 func (gs *genericStorage) Create(create *api.Create) (any, error) {
