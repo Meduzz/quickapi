@@ -16,8 +16,6 @@ type (
 		Create() any
 		// CreateArray created an array of *T so []*T (as any)
 		CreateArray() any
-		// Kind tells us what kind of entity we're deling with normal|json
-		Kind() EntityKind
 	}
 
 	// PreloadSupport allows you to preload a defined collection with optional conditions
@@ -29,8 +27,4 @@ type (
 	ScopeSupport interface {
 		Scopes() []*NamedFilter
 	}
-)
-
-const (
-	NormalKind = EntityKind("normal")
 )

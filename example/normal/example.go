@@ -35,10 +35,6 @@ var (
 	random                      = rand.New(rand.NewSource(int64(rand.Int31())))
 )
 
-func (p Person) Kind() model.EntityKind {
-	return model.NormalKind
-}
-
 func (p Person) Name() string {
 	return "persons"
 }
@@ -91,10 +87,6 @@ func (p Person) Scopes() []*model.NamedFilter {
 func (p *Person) BeforeSave(tx *gorm.DB) error {
 	tx.Statement.SetColumn("CAS", random.Int63())
 	return nil
-}
-
-func (p Pet) Kind() model.EntityKind {
-	return model.NormalKind
 }
 
 func (p Pet) Name() string {

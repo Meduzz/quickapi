@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"fmt"
-
 	"github.com/Meduzz/quickapi/api"
 	"github.com/Meduzz/quickapi/model"
 	"gorm.io/gorm"
@@ -37,13 +35,7 @@ var (
 )
 
 func CreateStorage(db *gorm.DB, entity model.Entity) (Storage, error) {
-	var storer Storer
-
-	if entity.Kind() == model.NormalKind {
-		storer = NewStorer(db, entity)
-	} else {
-		return nil, fmt.Errorf("unknown kind: %s", entity.Kind())
-	}
+	storer := NewStorer(db, entity)
 
 	return &genericStorage{storer}, nil
 }
