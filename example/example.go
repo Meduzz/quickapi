@@ -35,19 +35,19 @@ var (
 	random                      = rand.New(rand.NewSource(int64(rand.Int31())))
 )
 
-func (p Person) Name() string {
+func (Person) Name() string {
 	return "persons"
 }
 
-func (p Person) Create() any {
+func (Person) Create() any {
 	return &Person{}
 }
 
-func (p Person) CreateArray() any {
+func (Person) CreateArray() any {
 	return make([]*Person, 0)
 }
 
-func (p Person) Preload(key string) map[string]*model.PreloadConfig {
+func (Person) Preload(key string) map[string]*model.PreloadConfig {
 	it, ok := preload[key]
 
 	if !ok {
@@ -58,7 +58,7 @@ func (p Person) Preload(key string) map[string]*model.PreloadConfig {
 }
 
 // implement optimistic locking..ish
-func (p Person) Scopes() []*model.NamedFilter {
+func (Person) Scopes() []*model.NamedFilter {
 	return []*model.NamedFilter{
 		{
 			Name: "version",
@@ -89,15 +89,15 @@ func (p *Person) BeforeSave(tx *gorm.DB) error {
 	return nil
 }
 
-func (p Pet) Name() string {
+func (Pet) Name() string {
 	return "pets"
 }
 
-func (p Pet) Create() any {
+func (Pet) Create() any {
 	return &Pet{}
 }
 
-func (p Pet) CreateArray() any {
+func (Pet) CreateArray() any {
 	return make([]*Pet, 0)
 }
 

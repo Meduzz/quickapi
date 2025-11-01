@@ -58,10 +58,6 @@ Accept: application/json
     "age": 43
 }
 
-### Person meta
-GET /persons/_meta
-Host: localhost:8080
-
 ### Delete a pet
 DELETE /pets/2
 Host: localhost:8080
@@ -70,4 +66,12 @@ Accept: application/json
 
 ### fetch pets
 GET /pets/
+Host: localhost:8080
+
+### Person meta
+GET /persons/_meta
+Host: localhost:8080
+
+### Service meta
+GET /_discover
 Host: localhost:8080
