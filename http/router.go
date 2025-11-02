@@ -2,7 +2,6 @@ package http
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/Meduzz/helper/http/herror"
@@ -20,6 +19,15 @@ type (
 	}
 )
 
+const (
+	ID      = "id"
+	PRELOAD = "preload"
+	TAKE    = "take"
+	SKIP    = "skip"
+	WHERE   = "where"
+	SORT    = "sort"
+)
+
 func newRouter(db *gorm.DB, entity model.Entity) *router {
 	store := storage.CreateStorage(db, entity)
 
@@ -27,8 +35,7 @@ func newRouter(db *gorm.DB, entity model.Entity) *router {
 }
 
 func (r *router) Create(ctx *gin.Context) {
-	entity := r.entity.Create()
-	err := ctx.BindJSON(entity)
+	entity, err := ExtractBody(r.entity, ctx)
 
 	if err != nil {
 		println("binding body threw error", err.Error())
@@ -51,11 +58,10 @@ func (r *router) Create(ctx *gin.Context) {
 }
 
 func (r *router) Read(ctx *gin.Context) {
-	id := ctx.Param("id")
-	preload := ctx.QueryMap("preload")
+	id := ExtractID(ID, ctx)
+	preload := ExtractQueryMap(PRELOAD, ctx)
 
 	req := api.NewRead(id, preload)
-
 	entity, err := r.storage.Read(req)
 
 	if err != nil {
@@ -70,10 +76,8 @@ func (r *router) Read(ctx *gin.Context) {
 }
 
 func (r *router) Update(ctx *gin.Context) {
-	id := ctx.Param("id")
-	entity := r.entity.Create()
-
-	err := ctx.BindJSON(entity)
+	id := ExtractID(ID, ctx)
+	entity, err := ExtractBody(r.entity, ctx)
 
 	if err != nil {
 		println("binding body threw error", err.Error())
@@ -81,13 +85,7 @@ func (r *router) Update(ctx *gin.Context) {
 		return
 	}
 
-	hooks := make([]model.Hook, 0)
-
-	scopeSupport, ok := r.entity.(model.ScopeSupport)
-
-	if ok {
-		hooks = createScopes(ctx, scopeSupport.Scopes())
-	}
+	hooks := CreateHooks(r.entity, ctx)
 
 	req := api.NewUpate(id, entity, hooks)
 	entity, err = r.storage.Update(req)
@@ -104,15 +102,8 @@ func (r *router) Update(ctx *gin.Context) {
 }
 
 func (r *router) Delete(ctx *gin.Context) {
-	id := ctx.Param("id")
-
-	hooks := make([]model.Hook, 0)
-
-	scopeSupport, ok := r.entity.(model.ScopeSupport)
-
-	if ok {
-		hooks = createScopes(ctx, scopeSupport.Scopes())
-	}
+	id := ExtractID(ID, ctx)
+	hooks := CreateHooks(r.entity, ctx)
 
 	req := api.NewDelete(id, hooks)
 	err := r.storage.Delete(req)
@@ -129,47 +120,15 @@ func (r *router) Delete(ctx *gin.Context) {
 }
 
 func (r *router) Search(ctx *gin.Context) {
-	sSkip := ctx.DefaultQuery("skip", "0")
-	sTake := ctx.DefaultQuery("take", "25")
-	where, ok := ctx.GetQueryMap("where")
+	take := ExtractQueryInt(TAKE, 25, ctx)
+	skip := ExtractQueryInt(SKIP, 0, ctx)
+	where := ExtractQueryMap(WHERE, ctx)
+	sort := ExtractQueryMap(SORT, ctx)
 
-	if !ok {
-		where = make(map[string]string)
-	}
+	preload := ExtractQueryMap(PRELOAD, ctx)
+	hooks := CreateHooks(r.entity, ctx)
 
-	sort, ok := ctx.GetQueryMap("sort")
-
-	if !ok {
-		sort = make(map[string]string)
-	}
-
-	iSkip, err := strconv.Atoi(sSkip)
-
-	if err != nil {
-		println("parsing query parameter 'skip' threw error", err.Error())
-		ctx.AbortWithStatus(400)
-		return
-	}
-
-	iTake, err := strconv.Atoi(sTake)
-
-	if err != nil {
-		println("parsing query parameter 'take' threw error", err.Error())
-		ctx.AbortWithStatus(400)
-		return
-	}
-
-	preload := ctx.QueryMap("preload")
-	hooks := make([]model.Hook, 0)
-
-	scopeSupport, ok := r.entity.(model.ScopeSupport)
-
-	if ok {
-		hooks = createScopes(ctx, scopeSupport.Scopes())
-	}
-
-	req := api.NewSearch(iSkip, iTake, where, sort, preload, hooks)
-
+	req := api.NewSearch(skip, take, where, sort, preload, hooks)
 	data, err := r.storage.Search(req)
 
 	if err != nil {
@@ -190,9 +149,8 @@ func (r *router) Search(ctx *gin.Context) {
 }
 
 func (r *router) Patch(ctx *gin.Context) {
-	id := ctx.Param("id")
+	id := ExtractID(ID, ctx)
 	data := make(map[string]any)
-
 	err := ctx.BindJSON(&data)
 
 	if err != nil {
@@ -201,15 +159,8 @@ func (r *router) Patch(ctx *gin.Context) {
 		return
 	}
 
-	preload := ctx.QueryMap("preload")
-
-	hooks := make([]model.Hook, 0)
-
-	scopeSupport, ok := r.entity.(model.ScopeSupport)
-
-	if ok {
-		hooks = createScopes(ctx, scopeSupport.Scopes())
-	}
+	preload := ExtractQueryMap(PRELOAD, ctx)
+	hooks := CreateHooks(r.entity, ctx)
 
 	req := api.NewPatch(id, data, preload, hooks)
 	entity, err := r.storage.Patch(req)
