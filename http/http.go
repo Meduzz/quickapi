@@ -39,11 +39,11 @@ type (
 
 // For sets up routing for T in the provided router group
 // but leaves up to you to deal with the server and run migrations.
-func For(db *gorm.DB, e *gin.RouterGroup, entities ...model.Entity) error {
+func For(db *gorm.DB, e *gin.RouterGroup, config *Config, entities ...model.Entity) error {
 	discovery := &Discovery{}
 
 	listOfNames := slice.Map(entities, func(entity model.Entity) string {
-		r := newRouter(db, entity)
+		r := newRouter(db, config, entity)
 		api := e.Group(fmt.Sprintf("/%s", entity.Name()))
 
 		// setup REST endpoints

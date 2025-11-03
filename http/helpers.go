@@ -8,19 +8,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ExtractID(param string, ctx *gin.Context) string {
-	return ctx.Param(param)
+func ExtractID(param string) func(*gin.Context) string {
+	return func(ctx *gin.Context) string {
+		return ctx.Param(param)
+	}
 }
 
-func ExtractQueryMap(param string, ctx *gin.Context) map[string]string {
-	return ctx.QueryMap(param)
+func ExtractQueryMap(param string) func(*gin.Context) map[string]string {
+	return func(ctx *gin.Context) map[string]string {
+		return ctx.QueryMap(param)
+	}
 }
 
-func ExtractBody(entity model.Entity, ctx *gin.Context) (any, error) {
-	e := entity.Create()
-	err := ctx.BindJSON(e)
-
-	return e, err
+func ExtractBody(entity any, ctx *gin.Context) (any, error) {
+	err := ctx.BindJSON(entity)
+	return entity, err
 }
 
 func CreateHooks(entity model.Entity, ctx *gin.Context) []model.Hook {
@@ -34,14 +36,16 @@ func CreateHooks(entity model.Entity, ctx *gin.Context) []model.Hook {
 	return hooks
 }
 
-func ExtractQueryInt(param string, defaultValue int, ctx *gin.Context) int {
-	sSkip := ctx.DefaultQuery(param, fmt.Sprintf("%d", defaultValue))
-	iSkip, err := strconv.Atoi(sSkip)
+func ExtractQueryInt(param string, defaultValue int) func(*gin.Context) int {
+	return func(ctx *gin.Context) int {
+		sSkip := ctx.DefaultQuery(param, fmt.Sprintf("%d", defaultValue))
+		iSkip, err := strconv.Atoi(sSkip)
 
-	if err != nil {
-		println("parsing query parameter 'skip' threw error", err.Error())
-		return defaultValue
+		if err != nil {
+			println("parsing query parameter 'skip' threw error", err.Error())
+			return defaultValue
+		}
+
+		return iSkip
 	}
-
-	return iSkip
 }

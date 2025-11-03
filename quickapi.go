@@ -26,8 +26,10 @@ func GinStarter(db *gorm.DB, entities ...model.Entity) *cobra.Command {
 			return err
 		}
 
+		config := http.DefaultConfig()
+
 		// iterate entities and create their api
-		err = http.For(db, &engine.RouterGroup, entities...)
+		err = http.For(db, &engine.RouterGroup, config, entities...)
 
 		if err != nil {
 			return err

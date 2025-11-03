@@ -16,26 +16,18 @@ type (
 	router struct {
 		storage storage.Storage
 		entity  model.Entity
+		config  *Config
 	}
 )
 
-const (
-	ID      = "id"
-	PRELOAD = "preload"
-	TAKE    = "take"
-	SKIP    = "skip"
-	WHERE   = "where"
-	SORT    = "sort"
-)
-
-func newRouter(db *gorm.DB, entity model.Entity) *router {
+func newRouter(db *gorm.DB, config *Config, entity model.Entity) *router {
 	store := storage.CreateStorage(db, entity)
 
-	return &router{store, entity}
+	return &router{store, entity, config}
 }
 
 func (r *router) Create(ctx *gin.Context) {
-	entity, err := ExtractBody(r.entity, ctx)
+	entity, err := r.config.Body(r.entity.Create(), ctx)
 
 	if err != nil {
 		println("binding body threw error", err.Error())
@@ -58,8 +50,8 @@ func (r *router) Create(ctx *gin.Context) {
 }
 
 func (r *router) Read(ctx *gin.Context) {
-	id := ExtractID(ID, ctx)
-	preload := ExtractQueryMap(PRELOAD, ctx)
+	id := r.config.ID(ctx)
+	preload := r.config.Preload(ctx)
 
 	req := api.NewRead(id, preload)
 	entity, err := r.storage.Read(req)
@@ -76,8 +68,8 @@ func (r *router) Read(ctx *gin.Context) {
 }
 
 func (r *router) Update(ctx *gin.Context) {
-	id := ExtractID(ID, ctx)
-	entity, err := ExtractBody(r.entity, ctx)
+	id := r.config.ID(ctx)
+	entity, err := r.config.Body(r.entity.Create(), ctx)
 
 	if err != nil {
 		println("binding body threw error", err.Error())
@@ -102,7 +94,7 @@ func (r *router) Update(ctx *gin.Context) {
 }
 
 func (r *router) Delete(ctx *gin.Context) {
-	id := ExtractID(ID, ctx)
+	id := r.config.ID(ctx)
 	hooks := CreateHooks(r.entity, ctx)
 
 	req := api.NewDelete(id, hooks)
@@ -120,12 +112,12 @@ func (r *router) Delete(ctx *gin.Context) {
 }
 
 func (r *router) Search(ctx *gin.Context) {
-	take := ExtractQueryInt(TAKE, 25, ctx)
-	skip := ExtractQueryInt(SKIP, 0, ctx)
-	where := ExtractQueryMap(WHERE, ctx)
-	sort := ExtractQueryMap(SORT, ctx)
+	take := r.config.Take(ctx)
+	skip := r.config.Skip(ctx)
+	where := r.config.Where(ctx)
+	sort := r.config.Sorting(ctx)
 
-	preload := ExtractQueryMap(PRELOAD, ctx)
+	preload := r.config.Preload(ctx)
 	hooks := CreateHooks(r.entity, ctx)
 
 	req := api.NewSearch(skip, take, where, sort, preload, hooks)
@@ -149,7 +141,7 @@ func (r *router) Search(ctx *gin.Context) {
 }
 
 func (r *router) Patch(ctx *gin.Context) {
-	id := ExtractID(ID, ctx)
+	id := r.config.ID(ctx)
 	data := make(map[string]any)
 	err := ctx.BindJSON(&data)
 
@@ -159,7 +151,7 @@ func (r *router) Patch(ctx *gin.Context) {
 		return
 	}
 
-	preload := ExtractQueryMap(PRELOAD, ctx)
+	preload := r.config.Preload(ctx)
 	hooks := CreateHooks(r.entity, ctx)
 
 	req := api.NewPatch(id, data, preload, hooks)
